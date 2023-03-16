@@ -19,6 +19,7 @@ public struct BaseConfiguration {
     /// The max count limit for the paginated requests of items.
     public let requestLimit: Int
     
+    /// The timeout for the media network requests.
     public let mediaRequestsTimeout: TimeInterval
     
     /// Initializes the `BaseConfiguration` object.

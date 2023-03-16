@@ -9,13 +9,15 @@ import UIKit
 import FleksyAppsCore
 import SwiftUI
 
-/// An object that handles the processes of a FleksyApp
+/// An object that handles the processes of a FleksyApp.
 ///
-/// If the category selection view is not needed, you can use `Never` as the `Category` type.
+/// If the category selection view is not needed, you can use `Never` as the `Category` type in your subclass of ``BaseApp``.
+/// - Important: This class is only meant to be subclassed. Do not use this class as is.
 open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardApp {
     
     public typealias BaseContentResult = Result<[ContentType], BaseError>
     private typealias BaseContentTask = Task<BaseContentResult, Never>
+    
     /// The unique app id.
     public let appId: String
     
@@ -26,12 +28,15 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// The app configuration.
     public let configuration: BaseConfiguration
     
+    /// The current contents being shown by the app.
     @MainActor
     public private(set) var currentContents: [ContentType] = [] {
         didSet {
             appView?.reloadContents(currentContents)
         }
     }
+    
+    /// The current available categories selectable by the user.
     public private(set) var currentCategories: [Category] = []
     private var selectedCategory: Category? {
         appView?.selectedCategoryIndex.map {
@@ -44,14 +49,16 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// The function to load subsequent pages of the current
     private var currentContentsLoader: ((Pagination) async -> BaseContentResult)?
     
-    /// The default category for the initial results load. By default, the `BaseApp` uses the first elements in ``BaseApp/currentCategories`` as the default category.
+    /// The default category for the initial results load. By default, the ``BaseApp`` uses the first elements in ``BaseApp/currentCategories`` as the default category.
     ///
-    /// This property can be overriden to return the desired category.
+    /// Optionally override this property to return the desired category.
     open var defaultCategory: Category? {
         currentCategories.first
     }
     
     /// The current `AppListener`.
+    ///
+    /// Subclasses of the ``BaseApp`` should use this object to show or hide.
     public internal(set) var appListener: AppListener?
     
     private var appView: BaseAppView<ContentType, Category>?
@@ -59,7 +66,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// Initialises and returns a newly allocated base app object with the specified ID.
     /// - Parameters:
     ///   - id: The unique app id.
-    ///   - configuration: The configuration of the app to initialize.
+    ///   - configuration: The configuration of the app to initialize. See ``BaseConfiguration/init(searchPlaceholder:searchButtonText:requestLimit:mediaRequestsTimeout:)`` for the default configuration.
     public init(id: String, configuration: BaseConfiguration = BaseConfiguration()) {
         self.appId = id
         self.configuration = configuration
@@ -74,32 +81,35 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     ///   - listener: The listener that allows interaction with the SDK to perform actions on the keyboard.
     ///   - configuration: The locale configuration shared between all FleksyApps.
     ///
-    /// Remember to call `super`'s implementation.
+    /// Usually, you don't need to override this method, since the ``BaseApp`` already keeps a reference to the `listener` and applies the `configuration` to the app's view.
+    ///
+    /// - Important: If you need to override this method, always call `super`'s implementation at some point.
     open func initialize(listener: AppListener, configuration: AppConfiguration) {
         self.appListener = listener
     }
     
-    /// Invoked when the app is being disposed.
+    /// Invoked when the app is being disposed, meaning, the app is not between the enabled apps in the keyboard anymore (i.e. the app was not added to the `KeyboardConfiguration`'s `AppsConfiguration`).
     ///
-    /// Dispose the app and free resources until (if) initialize is called again.
+    /// Optionally override this method to release retained properties by the app and free resources until (if) initialize is called again.
     ///
-    /// Default implementation does nothing
-    open func dispose() {}
+    /// - Important: Always call `super`'s implementation.
+    open func dispose() {
+        appListener = nil
+    }
     
-    /// The view mode for the FleksyApp when opened from the carousel.
+    /// The view mode for the FleksyApp when opened from the carousel. The ``BaseApp`` returns `KeyboardAppViewMode.fullCover`
     ///
-    /// The default value is `.fullCover`
+    /// Override this property if your FleksyApp needs a different initial view mode.
     open var defaultViewMode: KeyboardAppViewMode { .fullCover }
     
-    /// Invoked when the app is opening. Selects the view to use depending on the `viewMode`.
+    /// Invoked when the app is about to be opened. Returns the view to use for the FleksyApp.
     ///
-    /// This method returns the view for the received viewMode.
-    ///
-    /// It makes use of the ``BaseApp/createFullView()`` and ``BaseApp/createFrameView()`` to assign the values of ``BaseApp/fullView`` and ``BaseApp/frameView`` respectively. If you override this method you should call `super` at the end of your implementation.
     /// - Parameters:
     ///   - viewMode: The view mode the FleksyApp will use.
     ///   - theme: The theme the FleksyApp will use.
     /// - Returns: The current view the FleksyApp will present.
+    ///
+    /// - Important: If you need to override this method, always return `super`'s returned view.
     @MainActor
     open func open(viewMode: KeyboardAppViewMode, theme: AppTheme) -> UIView? {
         let view: BaseAppView<ContentType, Category>
@@ -121,10 +131,11 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         return view
     }
     
-    /// Invoked when the app is closing.
+    /// Invoked when the app was just closed.
     ///
-    /// The default implementation cleans up the allocated objects to release memory. Always call `super` when overriding this method.
-    /// - note: Consider releasing your views from memory at this stage.
+    /// The default implementation cleans up the allocated objects to release memory.
+    ///
+    /// - Important: Always call `super`'s implementation if overriding this method.
     @MainActor
     open func close() {
         appView = nil
@@ -140,22 +151,24 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// Invoked when the configuration changed.
     ///
     /// - Parameter configuration: The new `AppConfiguration`.
-    /// The default implementation does nothing.
+    ///
+    /// - Important: Always call `super`'s implementation if overriding this method (in case a future version of the ``BaseApp`` adds an implementation to this method).
     open func onConfigurationChanged(_ configuration: AppConfiguration) {}
     
-    /// Invoked when the theme changes.
+    /// Invoked when the theme changes. Used by the ``BaseApp`` to update the theme on the app's view.
     ///
     /// - Parameter theme: The new theme.
-    /// The default implementation updates the theme on the app's view. Always call `super` when overriding this method.
+    ///
+    /// - Important: Always call `super`'s implementation if overriding this method.
     open func onThemeChanged(_ theme: AppTheme) {
         appView?.appTheme = theme
     }
     
     /// Returns icon of the app.
     ///
-    /// Consider using the `.alwaysTemplate` rendering mode if you want it to adjust automaticaly to the current theme.
+    /// Subclasses should override this method to customize their app icon. If you want the icon to adjust automaticaly to the current theme, consider using the `.alwaysTemplate` rendering mode.
     ///
-    /// By default it will use a question mark icon. Override to customize the icon.
+    /// By default, the ``BaseApp`` returns a question mark icon.
     /// - Returns: The icon of the app.
     open func appIcon() -> UIImage? {
         return BaseConstants.Images.defaultAppIcon
@@ -169,7 +182,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// - Parameter pagination: The expected pagination for the request.
     /// - Returns: The result of the request.
     ///
-    /// This method **must** be overriden. Do not call super's implementation, as it always returns an error.
+    /// **This method must be overriden**. Do not call super's implementation, as it always returns an error.
     /// - Important: If the load of default contents is equivalent to getting the contents for a specific category,
     /// you need to manually call ``BaseApp/setSelectedCategory(_:)`` to visually mark that category as the selected one.
     open func getDefaultContentsFor(pagination: Pagination) async -> BaseContentResult {
@@ -183,7 +196,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     ///   - pagination: The expected pagination for the request.
     /// - Returns: The result of the request.
     ///
-    /// This method **must** be overriden. Do not call super's implementation, as it always returns an error.
+    /// **This method must be overriden**. Do not call `super`'s implementation, as it always returns an error.
     ///
     /// When this method gets called, this means that the user selected the specific `category`, so you don't need to call
     /// ``BaseApp/setSelectedCategory(_:)`` since it is done automatically for you by the ``BaseApp`` implementation.
@@ -198,7 +211,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     ///   - pagination: The expected pagination for the request.
     /// - Returns: The result of the request.
     ///
-    /// This method **must** be overriden. Do not call super's implementation, as it always returns an error.
+    /// **This method must be overriden**. Do not call `super`'s implementation, as it always returns an error.
     ///
     /// When this method gets called, this means that the user typed and searched for a specific query. If getting the contents for a
     /// specific query is equivalent to getting the contents for a specific category, you need to manually call
@@ -211,7 +224,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// Override this method to request and return the categories for app.
     /// - Returns: The categories available for the user to select. Returning an empty array hides the category selection view.
     ///
-    /// This method **must** be overriden unless the `Category` type is `Never`. Do not call super's implementation, as it always returns an empty array.
+    /// **This method must be overriden** unless the `Category` type is `Never`. Do not call `super`'s implementation, as it always returns an empty array.
     open func getCategories() async -> [Category] {
         if Category.self != Never.self {
             assertionFailure("Method \(#function) must be implemented by the BaseApp subclass when using a custom `Category` type")
@@ -226,12 +239,21 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// The default implementation returns the `error`'s default error message (see ``BaseError/defaultErrorMessage``).
     ///
     /// To customize the error messages, you have two options:
-    /// * Override this method to return **localized** strings
+    /// * Override this method to return **localized** strings.
     /// * Localized all the error strings in ``BaseConstants/Strings``.
     @MainActor
     open func getErrorMessageForError(_ error: BaseError) -> String {
         error.defaultErrorMessage
     }
+    
+    /// This method is called by the KeyboardSDK when the user taps the app icon next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
+    ///
+    /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
+    @MainActor
+    open func onAppIconAction() {
+        appListener?.show(mode: .fullCover)
+    }
+    
     
     /// Override this method to perform any desired action when the user taps a content cell.
     /// - Parameter content: The content object tapped by the user.
@@ -448,16 +470,25 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
 
 extension BaseApp: AppTextFieldDelegate {
     
+    /// The placeholder used by app for the in-keyboard text field when showing the app in `KeyboardAppViewMode.frame` mode with `TopBarMode.appTextField` top bar mode.
+    ///
+    /// - Important: This property can't be overriden. Configure this string with the ``BaseConfiguration`` used to initialize the app. This method returns the ``BaseConfiguration/searchPlaceholder``.
     public var placeholder: String? {
         configuration.searchPlaceholder
     }
     
+    /// This method is called by the KeyboardSDK whenever the user changes the text in the in-keyboard text field (during `KeyboardAppViewMode.frame` mode with `TopBarMode.appTextField` top bar mode).
+    ///
+    /// - Important: Do not call this method form the ``BaseApp`` subclass.
     public func onTextDidChange(_ text: String?) {
         if text == nil || text?.isEmpty == true {
             performDefaultRequest()
         }
     }
     
+    /// This method is called by the KeyboardSDK if the taps the return button while the in-keyboard text field has the focus (during `KeyboardAppViewMode.frame` mode with `TopBarMode.appTextField` top bar mode).
+    ///
+    /// - Important: Do not call this method form the ``BaseApp`` subclass.
     public func onReturnKeyAction(_ text: String?) {
         if let text, !text.isEmpty {
             performSearchRequest(query: text)
@@ -466,31 +497,30 @@ extension BaseApp: AppTextFieldDelegate {
         }
     }
     
-    /// This method is called when the user taps the app icon. The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
+    /// This method is called by the KeyboardSDK the close button in the app during `KeyboardAppViewMode.frame` mode with `TopBarMode.appTextField` top bar mode. The implementation of the base app closes the app.
     ///
-    /// If needed, override this method to modify this behavior.
-    public func onAppIconAction() {
-        appListener?.show(mode: .fullCover)
+    /// - Important: Do not call this method form the ``BaseApp`` subclass.
+    public func onCloseAction() {
+        appListener?.hide()
     }
 }
-
 
 // MARK: - BaseAppViewDelegate
 
 extension BaseApp: BaseAppViewDelegate {
     
-    public func onSearchAction() {
+    /// Method called when the user taps the search button in the app during `KeyboardAppViewMode.fullCover` mode. The base app changes the view mode to `KeyboardAppViewMode.frame` with `TopBarMode.appTextField` top bar mode.
+    ///
+    /// - Important: Do not call this method form the ``BaseApp`` subclass.
+    func onSearchAction() {
         appListener?.show(mode: .frame(barMode: .appTextField(delegate: self)))
-    }
-    
-    public func onCloseAction() {
-        appListener?.hide()
     }
     
     // MARK: - ListViewDelegate
     
+    
     @MainActor
-    public func localURLForContentAt(index: Int) -> URL? {
+    func localURLForContentAt(index: Int) -> URL? {
         guard index < currentContents.count else {
             return nil
         }
@@ -498,7 +528,7 @@ extension BaseApp: BaseAppViewDelegate {
         return mediaManager.localFileURL(for: content)
     }
     
-    public func loadContentAt(index: Int) async {
+    func loadContentAt(index: Int) async {
         let currentContents = await currentContents
         guard index < currentContents.count else {
             return
@@ -507,7 +537,7 @@ extension BaseApp: BaseAppViewDelegate {
         _ = await mediaManager.downloadMediaIfNeeded(from: content)
     }
     
-    public func prefetchItemsAt(indexes: [Int]) {
+    func prefetchItemsAt(indexes: [Int]) {
         let contentsCount = currentContents.count
         var mutableContentsToFetch = [ContentType]()
         var mutableNotYetAvailableIndexes = [Int]()
@@ -546,14 +576,13 @@ extension BaseApp: BaseAppViewDelegate {
         }
     }
     
-    public func willShowItemAt(index: Int) {
+    func willShowItemAt(index: Int) {
         if index >= currentContents.count - 2 {
             loadNextPage()
         }
     }
     
-    
-    public func cancelPrefetchOfItemsAt(indexes: [Int]) {
+    func cancelPrefetchOfItemsAt(indexes: [Int]) {
         let currentContents = currentContents
         Task.detached {
             await withTaskGroup(of: Void.self) { group in

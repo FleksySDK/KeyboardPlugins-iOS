@@ -11,7 +11,7 @@ import Foundation
 ///
 /// Each ``BaseContent`` object gets shown in a cell of the list in the FleksyApp.
 ///
-/// - Important: The default implementation of `Hashable` only considers the ``BaseContent/id``.
+/// - Important: The default implementation of `Hashable` for ``BaseContent`` only considers the ``BaseContent/id``.
 public protocol BaseContent: Hashable {
     
     /// A unique identifier.

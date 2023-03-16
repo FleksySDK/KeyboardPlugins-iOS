@@ -8,7 +8,7 @@
 import UIKit
 import BaseFleksyApp
 
-public enum GiphyConstants {
+enum GiphyConstants {
     static let logoThumbnailVideoURL = URL(string: "https://s3-eu-west-1.amazonaws.com/tt-fk-static-content/Poweredby_100px_Badge.mp4")!
     static let logoGifURL = URL(string: "https://s3-eu-west-1.amazonaws.com/tt-fk-static-content/Poweredby_100px_Badge.gif")!
     

@@ -11,9 +11,12 @@ import FleksyAppsCore
 import UniformTypeIdentifiers
 #endif
 
+/// The main class of Giphy FleksyApp.
+///
+/// Use this class as the entry point to add the Giphy App to your keyboard extension.
 final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
     
-    /// Animations constants
+    // Animations constants
     private static let defaultToastDuration: UInt64 = 2 // Seconds
     private static let downloadingToastDelay: TimeInterval = 0.3 // Seconds
     
@@ -24,6 +27,8 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
     private let apiKey: String
     private lazy var service = GiphyService(giphyApiKey: apiKey)
     
+    /// Creates a new instance of the GiphyApp with the given Giphy api key.
+    /// - Parameter apiKey: The Giphy api key.
     public init(apiKey: String) {
         let configuration = BaseConfiguration(searchPlaceholder: GiphyConstants.LocalizedStrings.searchPlaceHolder,
                                               searchButtonText: GiphyConstants.LocalizedStrings.searchButtonText)
@@ -31,20 +36,29 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
         super.init(id: Self.appId, configuration: configuration)
     }
     
+    /// The icon for the Giphy app.
+    ///
+    /// You need not call this method at any point. This method is public only for conformance to the `KeyboardApp` protocol declared in the package `FleksyAppsCore`.
     public override func appIcon() -> UIImage? {
         return GiphyConstants.giphyAppIcon
     }
     
+    /// Applies the initial configuration to the app.
+    /// - Important: **Do not call this method at any point**. This method is public only for conformance to the `KeyboardApp` protocol declared in the package `FleksyAppsCore`.
     public override func initialize(listener: AppListener, configuration: AppConfiguration) {
         service.language = configuration.giphyLanguage
         super.initialize(listener: listener, configuration: configuration)
     }
     
+    /// Updates the configuration to the app.
+    /// - Important: **Do not call this method at any point**. This method is public only for conformance to the `KeyboardApp` protocol declared in the package `FleksyAppsCore`.
     public override func onConfigurationChanged(_ configuration: AppConfiguration) {
         service.language = configuration.giphyLanguage
         super.onConfigurationChanged(configuration)
     }
     
+    /// Gets the default content page for the app.
+    /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func getDefaultContentsFor(pagination: Pagination) async -> Result<[GifContent], BaseError> {
         await setSelectedCategory(GifsCategory.trendingCategory)
         return await service.getGifs(.trending(limit: pagination.limit, offset: pagination.offset)).map {
@@ -52,6 +66,8 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
         }
     }
     
+    /// Gets the content page for a given category for the app.
+    /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func getContentsFor(category: GifsCategory, pagination: Pagination) async -> Result<[GifContent], BaseError> {
         if category.query.isEmpty {
             return await getDefaultContentsFor(pagination: pagination)
@@ -60,6 +76,8 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
         }
     }
     
+    /// Gets the content page for a given query for the app.
+    /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func getContentsFor(query: String, pagination: Pagination) async -> Result<[GifContent], BaseError> {
         if query.isEmpty {
             return await getDefaultContentsFor(pagination: pagination)
@@ -68,6 +86,8 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
         }
     }
     
+    /// Gets the available categories for the app.
+    /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func getCategories() async -> [GifsCategory] {
         let categories = try? await service.getTrendingSearches().map {
             $0.toCategories()
@@ -76,6 +96,9 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
     }
     
     private var currentContentSelectionTask: Task<Void, Never>?
+    
+    /// Performs the action after the user selects a given content in the app.
+    /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func didSelectContent(_ content: GifContent) {
         currentContentSelectionTask?.cancel()
         currentContentSelectionTask = Task.detached(priority: .userInitiated) { [weak self] in
@@ -134,6 +157,7 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
 
 private extension AppConfiguration {
     
+    /// Returns the language for the Giphy API based on the `AppConfiguration` locale.
     var giphyLanguage: String? {
         let locale: Locale
         if !currentLocale.isEmpty {

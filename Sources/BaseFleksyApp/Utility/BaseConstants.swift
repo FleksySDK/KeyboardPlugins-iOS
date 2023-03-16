@@ -9,11 +9,11 @@ import UIKit
 
 /// Constants used on a base app.
 public enum BaseConstants {
-    public enum Images {
+    enum Images {
         /// A question mark.
         ///
         /// The default app icon on the carousel if none is provided.
-        public static var defaultAppIcon: UIImage? {
+        static var defaultAppIcon: UIImage? {
             if #available(iOS 15, *) {
                 return UIImage(systemName: "questionmark.app.fill")?.withRenderingMode(.alwaysTemplate)
             } else {
@@ -34,25 +34,27 @@ public enum BaseConstants {
         }
     }
     
+    /// A set of localized strings for the BaseApp.
     public enum LocalizedStrings {
+        /// The default text for the search actions in the BaseApp.
         public static let search = NSLocalizedString("Base.Search", value: "Search", comment: "The default title of the search button for the Base FleksyApps")
         
         // MARK: - Error messages
         
-        public static let noConnectionError = NSLocalizedString("BaseApp.Error.NoConnection", value: "There is no internet connection.", comment: "The user-facing error message for the lack of internet connection.")
+        static let noConnectionError = NSLocalizedString("BaseApp.Error.NoConnection", value: "There is no internet connection.", comment: "The user-facing error message for the lack of internet connection.")
         
-        public static let timeoutError = NSLocalizedString("BaseApp.Error.Timeout", value: "Request timed out.", comment: "The user-facing error message for a request that timed out.")
+        static let timeoutError = NSLocalizedString("BaseApp.Error.Timeout", value: "Request timed out.", comment: "The user-facing error message for a request that timed out.")
         
-        public static let badURLError = NSLocalizedString("BaseApp.Error.BadURL", value: "Error: bad URL.", comment: "The user-facing error message for a bad URL error.")
+        static let badURLError = NSLocalizedString("BaseApp.Error.BadURL", value: "Error: bad URL.", comment: "The user-facing error message for a bad URL error.")
         
-        public static let badServerResponseError = NSLocalizedString("BaseApp.Error.BadServerResponse", value: "Received a bad response from the server.", comment: "The user-facing error message for a bad server response.")
+        static let badServerResponseError = NSLocalizedString("BaseApp.Error.BadServerResponse", value: "Received a bad response from the server.", comment: "The user-facing error message for a bad server response.")
         
-        public static let requestCancelledError = NSLocalizedString("BaseApp.Error.RequestCancelled", value: "The request was cancelled", comment: "The user-facing error message for a cancelled request.")
+        static let requestCancelledError = NSLocalizedString("BaseApp.Error.RequestCancelled", value: "The request was cancelled", comment: "The user-facing error message for a cancelled request.")
         
-        public static func invalidHTTPStatusCodeError(_ statusCode: Int) -> String {
+        static func invalidHTTPStatusCodeError(_ statusCode: Int) -> String {
             String(format: NSLocalizedString("BaseApp.Error.InvalidHTTPStatusCodeFormat", value: "Error: invalid status code %d.", comment: "A user-facing error message for an invalid HTTP status code. The parameter is the HTTP status code of the request that failed."), statusCode)
         }
     
-        public static let otherError = NSLocalizedString("BaseApp.Error.Other", value: "An unknown error occurred.", comment: "The user-facing error message for a generic error")
+        static let otherError = NSLocalizedString("BaseApp.Error.Other", value: "An unknown error occurred.", comment: "The user-facing error message for a generic error")
     }
 }

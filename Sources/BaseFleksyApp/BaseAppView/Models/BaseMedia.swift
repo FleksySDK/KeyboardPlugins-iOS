@@ -10,7 +10,7 @@ import FleksyAppsCore
 
 /// An object that contains media information.
 ///
-/// The linked content by``BaseMedia/u``  will be shown in a cell of the list in the FleksyApp.
+/// The linked content by``BaseMedia/url``  will be shown in a cell of the list in the FleksyApp. The type of the cell will be determined by the ``BaseMedia/contentType-swift.property``.
 public struct BaseMedia: Equatable {
     
     /// The URL source.

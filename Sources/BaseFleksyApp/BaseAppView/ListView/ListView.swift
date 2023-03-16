@@ -99,7 +99,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
         setup()
     }
     
-    required public init?(coder: NSCoder) {
+    required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
@@ -189,7 +189,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
 
     // MARK: - UICollectionViewDelegate
     
-    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         delegate?.didSelectItemAt(index: indexPath.item)
     }
     
@@ -231,12 +231,12 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
 
 // MARK: - UICollectionViewDataSourcePrefetching
     
-    public func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         let indexes = indexPaths.map { $0.item }
         delegate?.prefetchItemsAt(indexes: indexes)
     }
     
-    public func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+    func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
         let indexes = indexPaths.map { $0.item }
         delegate?.cancelPrefetchOfItemsAt(indexes: indexes)
     }

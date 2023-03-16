@@ -8,6 +8,8 @@
 import Foundation
 
 /// The type for the generic `ContentType` in `BaseApp`.
+///
+/// If your custom ``BaseApp`` subclass supports categories, your category model object must implement this protocol.
 public protocol BaseCategory: Hashable {
     
     /// A unique identifier for the category.
