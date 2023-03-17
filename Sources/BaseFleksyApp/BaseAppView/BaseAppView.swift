@@ -104,6 +104,8 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
             actionsViewContainer.isHidden = false
         case .frame:
             actionsViewContainer.isHidden = true
+        @unknown default:
+            actionsViewContainer.isHidden = true
         }
         
         listView.configuration = ListViewConfiguration(keyboardAppViewMode: viewMode)

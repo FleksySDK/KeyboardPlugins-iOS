@@ -55,6 +55,8 @@ struct ListViewConfiguration: Equatable {
             self.bands = 2
         case .frame:
             self.bands = 1
+        @unknown default:
+            self.bands = 1
         }
         self.direction = .horizontal
         self.cellPadding = 1

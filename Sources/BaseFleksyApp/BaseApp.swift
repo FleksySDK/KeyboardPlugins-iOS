@@ -240,7 +240,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     ///
     /// To customize the error messages, you have two options:
     /// * Override this method to return **localized** strings.
-    /// * Localized all the error strings in ``BaseConstants/Strings``.
+    /// * Localized all the error strings in ``BaseConstants/LocalizedStrings``.
     @MainActor
     open func getErrorMessageForError(_ error: BaseError) -> String {
         error.defaultErrorMessage

@@ -32,7 +32,7 @@ public enum BaseError: Error {
     
     /// A localized user-facing error message.
     ///
-    /// The default implementation of ``BaseApp/getErrorMessageForError(_:)`` uses this property of ``BaseError`` as the user-facing text. Therefore, make sure you include the localization of all the error strings (see ``BaseConstants/Strings`` for the strings that need to be localized).
+    /// The default implementation of ``BaseApp/getErrorMessageForError(_:)`` uses this property of ``BaseError`` as the user-facing text. Therefore, make sure you include the localization of all the error strings (see ``BaseConstants/LocalizedStrings`` for the strings that need to be localized).
     public var defaultErrorMessage: String {
         switch self {
         case .noConnection:
