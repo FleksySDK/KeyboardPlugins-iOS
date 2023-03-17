@@ -9,9 +9,9 @@ import Foundation
 import BaseFleksyApp
 
 
-/// The type for the generic type `ContentType` in ``BaseApp`.
+/// The type for the generic type `ContentType` in `BaseApp`.
 ///
-/// - Important: You need not use this type. This type is public only because it conforms to the `BaseContent` protocol declared in the BaseApp.
+/// - Important: You need not use this type. This type is public only because it conforms to the `BaseContent` protocol declared in the `BaseApp`.
 public struct GifContent: BaseContent {
     
     /// A unique identifier of the gif content.
