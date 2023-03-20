@@ -245,7 +245,9 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         errorLabel.textAlignment = .center
         errorLabel.font = .preferredFont(forTextStyle: .body)
         errorLabel.numberOfLines = 0
-        errorLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        errorLabel.adjustsFontSizeToFitWidth = true
+        errorLabel.minimumScaleFactor = 0.7
+        errorLabel.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         
         loader.hidesWhenStopped = true
         
