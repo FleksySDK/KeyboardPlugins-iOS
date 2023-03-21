@@ -11,7 +11,7 @@ import SwiftUI
 
 /// An object that handles the processes of a FleksyApp.
 ///
-/// If the category selection view is not needed, you can use `Never` as the `Category` type in your subclass of ``BaseApp``.
+/// If the category selection view is not needed, you can use `Never` as the `Category` type in your subclass of ``BaseFleksyApp/BaseApp``.
 /// - Important: This class is only meant to be subclassed. Do not use this class as is.
 open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardApp {
     
@@ -232,6 +232,22 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         return []
     }
     
+    
+    /// Override this method to perform any desired action when the user taps a content cell.
+    /// - Parameter content: The content object tapped by the user.
+    ///
+    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation
+    @MainActor
+    open func didSelectContent(_ content: ContentType) {}
+    
+    /// This method is called by the KeyboardSDK when the user taps the app icon next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
+    ///
+    /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
+    @MainActor
+    open func onAppIconAction() {
+        appListener?.show(mode: .fullCover)
+    }
+    
     /// Optionally override this method to return a custom error message for the FleksyApp based on the error.
     /// - Parameter error: The error that happened.
     /// - Returns: An error message to be presented to the user.
@@ -245,22 +261,6 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     open func getErrorMessageForError(_ error: BaseError) -> String {
         error.defaultErrorMessage
     }
-    
-    /// This method is called by the KeyboardSDK when the user taps the app icon next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
-    ///
-    /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
-    @MainActor
-    open func onAppIconAction() {
-        appListener?.show(mode: .fullCover)
-    }
-    
-    
-    /// Override this method to perform any desired action when the user taps a content cell.
-    /// - Parameter content: The content object tapped by the user.
-    ///
-    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation
-    @MainActor
-    open func didSelectContent(_ content: ContentType) {}
     
     // MARK: Other public methods
     
