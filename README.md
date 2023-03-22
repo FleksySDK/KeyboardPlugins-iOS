@@ -12,6 +12,24 @@ It includes the `BaseApp` template that makes the process of creating certain st
 It also contains some ready-to-use apps to add directly to your keyboard extension:
 * [GiphyApp](Sources/GiphyApp/): A FleksyApp powered by Giphy that allows the user to search and copy gifs.
 
+# Installation
+
+You can use any of the FleksyApps in this package with the Swift Package Manager:
+```
+https://github.com/FleksySDK/fleksyapps-iOS
+```
+Remember: in order to use the FleksyApps in your keyboard extension you need to add the `FleksyApps` framework to your keyboard extension target:
+
+![Frameworks and Libraries section of keyboard target in Xcode including the FleksyApps framework](https://user-images.githubusercontent.com/95276123/226828607-aa07ac0b-f9d1-4c6e-8497-8cafb7660299.png)
+
+
+If you want to make use of the `BaseFleksyApp` to create your own FleksyApps, you can add the FleksyApps package as a dependency by adding it to the `dependencies` value of your `Package.swift`:
+```swift
+dependencies: [
+    .package(url: "https://github.com/FleksySDK/fleksyapps-iOS.git", .upToNextMajor(from: "1.0.0"))
+]
+```
+
 # Requirements
 
 * This package requires a minimum deployment version of iOS 13.
