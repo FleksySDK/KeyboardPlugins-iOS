@@ -35,10 +35,6 @@ dependencies: [
 * This package requires a minimum deployment version of iOS 13.
 * This package requires Xcode 14 or higher (Swift 5.7+).
 
-# How to collaborate ? 🤜🤛
-
-If you have a service that you would like to be used by a keyboard, please, create your own fleksyapps and submit a PR.
-
 
 # How to get help? 🙋
 
