@@ -19,11 +19,7 @@ struct Toast: View {
     }
     
     var backgroundColor: Color {
-        if appTheme.accent == appTheme.foreground {
-            return Color(appTheme.background)
-        } else {
-            return Color(appTheme.accent)
-        }
+        Color(appTheme.bestContrastColorForForeground)
     }
     
     var body: some View {

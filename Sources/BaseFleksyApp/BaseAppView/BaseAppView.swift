@@ -331,7 +331,7 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         searchButton.setTitleColor(appTheme.foreground, for: .normal)
         
         errorView.backgroundColor = appTheme.foreground
-        errorLabel.textColor = appTheme.background
+        errorLabel.textColor = appTheme.accent
         
         loader.color = appTheme.foreground
     }

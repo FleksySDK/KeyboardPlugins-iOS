@@ -80,7 +80,6 @@ class CategoryCell: UICollectionViewCell {
     
     private func updateColors() {
         labelView.backgroundColor = isSelected ? appTheme?.foreground : .clear
-        label.textColor = isSelected ? appTheme?.background : appTheme?.foreground
-        label.backgroundColor = isSelected ? appTheme?.foreground : .clear
+        label.textColor = isSelected ? appTheme?.bestContrastColorForForeground : appTheme?.foreground
     }
 }

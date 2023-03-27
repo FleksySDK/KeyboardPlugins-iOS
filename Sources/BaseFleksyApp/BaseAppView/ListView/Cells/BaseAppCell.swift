@@ -18,7 +18,7 @@ class BaseAppCell<ViewContent: UIView>: UICollectionViewCell {
     var appTheme: AppTheme? {
         didSet {
             backgroundColor = appTheme?.foreground.withAlphaComponent(0.5)
-            loader.color = appTheme?.background
+            loader.color = appTheme?.accent
         }
     }
     
