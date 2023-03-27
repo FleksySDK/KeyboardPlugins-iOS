@@ -19,7 +19,7 @@ extension AppTheme {
     /// This assumes that the foreground color is opaque (alpha channel is 1).
     var bestContrastColorForForeground: UIColor {
         let betterColorForForeground = [background, accent].first {
-            foreground.goesWellAsBackgroundFor(foregroundColor: $0)
+            foreground.hasHighEnoughContrastWith(otherColor: $0)
         }
         
         // If neither the background or the accent work well, we return
@@ -27,6 +27,7 @@ extension AppTheme {
         return betterColorForForeground ?? blackOrWhiteForForeground
     }
     
+    /// Returns the color between black or white that has higher contrast with the receive's `foreground`.
     private var blackOrWhiteForForeground: UIColor {
         let betterColor = [UIColor.white, UIColor.black].max {
             foreground.backgroundContrastRatioFor(foregroundColor: $0) < foreground.backgroundContrastRatioFor(foregroundColor: $1)
@@ -36,7 +37,7 @@ extension AppTheme {
 }
 
 fileprivate extension UIColor {
-    /// Assumes the receiver has alpha = 1 (is opaque).
+    /// Assumes the receiver will be used for background and has alpha = 1 (is opaque).
     func backgroundContrastRatioFor(foregroundColor: UIColor) -> CGFloat {
         
         // Get the RGB components of the colors (assyuming bgAlpha == 1)
@@ -62,16 +63,16 @@ fileprivate extension UIColor {
         return contrastRatio
     }
         
-    func goesWellAsBackgroundFor(foregroundColor: UIColor) -> Bool {
+    func hasHighEnoughContrastWith(otherColor: UIColor) -> Bool {
         let minContrastRatio: CGFloat = 4.5 // Min contrast ratio for AA level of contrast
-        return backgroundContrastRatioFor(foregroundColor: foregroundColor) >= minContrastRatio
+        return backgroundContrastRatioFor(foregroundColor: otherColor) >= minContrastRatio
     }
     
-    func inv_gam_sRGB(ic:CGFloat) -> CGFloat {
-        if (ic <= 0.03928) {
-            return ic/12.92
+    private func inv_gam_sRGB(ic:CGFloat) -> CGFloat {
+        if ic <= 0.03928 {
+            return ic / 12.92
         } else {
-            return pow(((ic+0.055)/(1.055)),2.4)
+            return pow((ic + 0.055) / (1.055), 2.4)
         }
     }
 }
