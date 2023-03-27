@@ -1,7 +1,7 @@
 # About 🤔
 
-FleksyApps serve as plugins for the Fleksy keyboard. 
-While developing a keyboard might consume some time, even when utilizing our [FleksySDK](https://github.com/FleksySDK/fleksy), FleksyApps are designed to reduce that time. This is a way to provide your own personalized feature on top of the Fleksy keyboard.
+FleksyApps serve as plugins for the Fleksy keyboard.
+This is a way to provide your own personalized feature on top of the Fleksy keyboard.
 
 
 # FleksyApps for iOS 🔌
