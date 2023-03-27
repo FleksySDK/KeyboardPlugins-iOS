@@ -8,4 +8,15 @@ Your keyboard extension built using [Fleksy Keyboard SDK](https://docs.fleksy.co
 
 The GiphyApp allows you to add a Giphy-powered gif browser to your keyboard extension. It offers the user with a list of trending gifs, a list of trending searches for the user to select from and the ability to search gifs. 
 
-![An image showing the GiphyApp in action.](GiphyApp.png)
+![A couple of images showing the GiphyApp in action.](GiphyApp.png)
+
+## Topics
+
+### Essentials
+
+- <doc:How-to-integrate>
+- <doc:Localization>
+
+### GiphyApp
+
+- ``GiphyApp/GiphyApp``

@@ -57,8 +57,14 @@ public struct BaseMedia: Equatable {
     }
     
     /// Options for the supported media content type.
+    ///
+    /// This enum is used to decide the type of the cells shown in the media content carousel.
     public enum ContentType {
+        
+        /// The type of the content for static images.
         case image
+        
+        /// The type of the content for videos that are automatically played and muted.
         case video
     }
 }

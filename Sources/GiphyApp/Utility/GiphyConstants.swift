@@ -21,7 +21,7 @@ enum GiphyConstants {
         
         static let noGifsError = NSLocalizedString("Giphy.Error.NoGifs", value: "Currently there are no gifs available.", comment: "Represents an error or information about the absence of gifs shown")
         
-        static let gifDownloadError = NSLocalizedString("Giphy.Error.download", value: "The gif couldn't download", comment: "The text shown when the user taps a gif but the gif download fails.")
+        static let gifDownloadError = NSLocalizedString("Giphy.Error.download", value: "The gif couldn't download", comment: "The text shown when the user taps a gif but the gif download fails")
     }
     
     static var giphyAppIcon: UIImage? {
