@@ -108,7 +108,7 @@ class CategoryView<Category: BaseCategory>: UIView, UICollectionViewDelegate {
     }
     
     private func applyAppTheme() {
-        collectionView.backgroundColor = appTheme.background
+        collectionView.backgroundColor = .clear
         collectionView.tintColor = appTheme.foreground
         for cell in collectionView.visibleCells {
             (cell as? CategoryCell)?.appTheme = appTheme
