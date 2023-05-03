@@ -116,7 +116,8 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         var snapshot = NSDiffableDataSourceSnapshot<Int, Content>()
         snapshot.appendSections([0])
         snapshot.appendItems(contents)
-        listView.dataSource.apply(snapshot, animatingDifferences: !contents.isEmpty)
+        let animateDiffs = !contents.isEmpty && listView.frame.width > 0 && listView.frame.height > 0
+        listView.dataSource.apply(snapshot, animatingDifferences: animateDiffs)
         if contents.isEmpty {
             listView.scrollToStart()
         }
@@ -131,7 +132,8 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
             var snapshot = NSDiffableDataSourceSnapshot<Int, Category>()
             snapshot.appendSections([0])
             snapshot.appendItems(categories)
-            categoryView.dataSource.apply(snapshot)
+            let animateDiffs = !categories.isEmpty && categoryView.frame.width > 0 && categoryView.frame.height > 0
+            categoryView.dataSource.apply(snapshot, animatingDifferences: animateDiffs)
             categoryView.scrollToStart()
         }
     }

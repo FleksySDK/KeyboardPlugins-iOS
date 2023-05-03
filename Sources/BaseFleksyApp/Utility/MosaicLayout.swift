@@ -85,16 +85,16 @@ class MosaicLayout: UICollectionViewLayout {
         for item in 0..<collectionView.numberOfItems(inSection: 0) {
             let indexPath = IndexPath(item: item, section: 0)
             
-            let itemSize = self.delegate?.collectionView(collectionView, absoluteSizeForItemAtIndexPath: indexPath) ?? CGSize(width: 1, height: 1)
+            let itemSize = self.delegate?.collectionView(collectionView, absoluteSizeForItemAtIndexPath: indexPath) ?? .zero
             var length: CGFloat
             let frame: CGRect
             switch self.direction {
             case .vertical:
-                length = self.cellPadding * 2 + bandSide * (itemSize.height / itemSize.width)
+                length = itemSize.width > 0 ? self.cellPadding * 2 + bandSide * (itemSize.height / itemSize.width) : 0
                 frame = CGRect(origin: CGPoint(x: sideOffset[band], y: lengthOffset[band]),
                                size: CGSize(width: bandSide, height: length))
             case .horizontal:
-                length = self.cellPadding * 2 + bandSide * (itemSize.width / itemSize.height)
+                length = itemSize.height > 0 ? self.cellPadding * 2 + bandSide * (itemSize.width / itemSize.height) : 0
                 frame = CGRect(origin: CGPoint(x: lengthOffset[band], y: sideOffset[band]),
                                size: CGSize(width: length, height: bandSide))
             @unknown default:

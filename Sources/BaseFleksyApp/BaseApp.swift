@@ -100,7 +100,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// The view mode for the FleksyApp when opened from the carousel. The ``BaseApp`` returns `KeyboardAppViewMode.fullCover`
     ///
     /// Override this property if your FleksyApp needs a different initial view mode.
-    open var defaultViewMode: KeyboardAppViewMode { .fullCover }
+    open var defaultViewMode: KeyboardAppViewMode { .fullCover() }
     
     /// Invoked when the app is about to be opened. Returns the view to use for the FleksyApp.
     ///
@@ -245,7 +245,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
     @MainActor
     open func onAppIconAction() {
-        appListener?.show(mode: .fullCover)
+        appListener?.show(mode: .fullCover())
     }
     
     /// Optionally override this method to return a custom error message for the FleksyApp based on the error.
