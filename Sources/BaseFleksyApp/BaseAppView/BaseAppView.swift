@@ -28,6 +28,7 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
             listView.appTheme = appTheme
             categoryView.appTheme = appTheme
             updateColors()
+            updateFont()
         }
     }
     
@@ -245,7 +246,6 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         errorView.layer.cornerRadius = 3
         
         errorLabel.textAlignment = .center
-        errorLabel.font = .preferredFont(forTextStyle: .body)
         errorLabel.numberOfLines = 0
         errorLabel.adjustsFontSizeToFitWidth = true
         errorLabel.minimumScaleFactor = 0.7
@@ -317,6 +317,7 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         categoryViewContainer.backgroundColor = .clear
         
         updateColors()
+        updateFont()
         
         errorView.isHidden = true
     }
@@ -336,5 +337,11 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         errorLabel.textColor = appTheme.accent
         
         loader.color = appTheme.foreground
+    }
+    
+    private func updateFont() {
+        let bodyFont = UIFontMetrics(forTextStyle: .body).scaledFont(for: appTheme.font.withSize(UIFont.labelFontSize))
+        errorLabel.font = bodyFont
+        searchButton.titleLabel?.font = bodyFont
     }
 }

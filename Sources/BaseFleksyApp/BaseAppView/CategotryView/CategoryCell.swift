@@ -13,6 +13,7 @@ class CategoryCell: UICollectionViewCell {
     var appTheme: AppTheme? {
         didSet {
             self.updateColors()
+            self.updateFont()
         }
     }
     
@@ -63,7 +64,7 @@ class CategoryCell: UICollectionViewCell {
         
         label.layer.cornerRadius = 8
         label.textAlignment = .center
-        label.font = .systemFont(ofSize: 12)
+        updateFont()
 
         label.translatesAutoresizingMaskIntoConstraints = false
         labelView.addSubview(label)
@@ -81,5 +82,13 @@ class CategoryCell: UICollectionViewCell {
     private func updateColors() {
         labelView.backgroundColor = isSelected ? appTheme?.foreground : .clear
         label.textColor = isSelected ? appTheme?.bestContrastColorForForeground : appTheme?.foreground
+    }
+    
+    private func updateFont() {
+        if let font = appTheme?.font {
+            label.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: font.withSize(UIFont.labelFontSize))
+        } else {
+            label.font = .preferredFont(forTextStyle: .body)
+        }
     }
 }
