@@ -14,7 +14,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/FleksySDK/iOS-FleksyAppsCore.git", from: "1.0.0"),
+        .package(url: "https://github.com/FleksySDK/iOS-FleksyAppsCore.git", from: "1.1.1"),
     ],
     targets: [
         .target(

@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/FleksySDK/iOS-FleksyAppsCore.git",
       "state" : {
-        "revision" : "fef4136a5dcfd8260e0f35f5bb65888db3965ddd",
-        "version" : "1.0.0"
+        "revision" : "bea0624efbdb3ebaca9038b74ffae505ba594a42",
+        "version" : "1.1.1"
       }
     }
   ],
