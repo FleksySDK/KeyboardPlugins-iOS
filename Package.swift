@@ -10,7 +10,8 @@ let package = Package(
             name: "FleksyApps",
             targets: [
                 "BaseFleksyApp",
-                "GiphyApp"]
+                "GiphyApp",
+                "MediaShareApp"]
         ),
     ],
     dependencies: [
@@ -26,6 +27,10 @@ let package = Package(
             name: "GiphyApp",
             dependencies: ["BaseFleksyApp"],
             resources: [.process("Media.xcassets")]
+        ),
+        .target(
+            name: "MediaShareApp",
+            dependencies: ["BaseFleksyApp"]
         ),
     ]
 )

@@ -525,7 +525,10 @@ extension BaseApp: BaseAppViewDelegate {
             return nil
         }
         let content = currentContents[index]
-        return mediaManager.localFileURL(for: content)
+        guard case .remoteMedia(let remoteMedia) = content.contentType else {
+            return nil
+        }
+        return mediaManager.localFileURL(id: content.id, for: remoteMedia)
     }
     
     func loadContentAt(index: Int) async {
@@ -534,7 +537,10 @@ extension BaseApp: BaseAppViewDelegate {
             return
         }
         let content = currentContents[index]
-        _ = await mediaManager.downloadMediaIfNeeded(from: content)
+        guard case .remoteMedia(let remoteMedia) = content.contentType else {
+            return
+        }
+        _ = await mediaManager.downloadMediaIfNeeded(id: content.id, for: remoteMedia)
     }
     
     func prefetchItemsAt(indexes: [Int]) {
@@ -557,8 +563,10 @@ extension BaseApp: BaseAppViewDelegate {
                 await withTaskGroup(of: Void.self) { [weak self] group in
                     guard let self else { return }
                     for content in contentsToFetch {
-                        group.addTask(priority: .userInitiated) {
-                            _ = await self.mediaManager.downloadMediaIfNeeded(from: content)
+                        if case .remoteMedia(let remoteMedia) = content.contentType {
+                            group.addTask(priority: .userInitiated) {
+                                _ = await self.mediaManager.downloadMediaIfNeeded(id: content.id, for: remoteMedia)
+                            }
                         }
                     }
                 }
@@ -591,7 +599,7 @@ extension BaseApp: BaseAppViewDelegate {
                     .forEach {
                         let result = currentContents[$0]
                         group.addTask {
-                            await self.mediaManager.cancelMediaDownload(for: result)
+                            await self.mediaManager.cancelMediaDownload(id: result.id)
                         }
                     }
             }
@@ -609,8 +617,12 @@ extension BaseApp: BaseAppViewDelegate {
         guard index < currentContents.count else {
             return .zero
         }
-        let result = currentContents[index]
-        return CGSize(width: result.viewMedia.width, height: result.viewMedia.height)
+        switch currentContents[index].contentType {
+        case .remoteMedia(let remoteMedia):
+            return CGSize(width: remoteMedia.width, height: remoteMedia.height)
+        case .html(_, let width, let height):
+            return CGSize(width: width, height: height)
+        }
     }
     
     // MARK: - CategoryViewDelegate

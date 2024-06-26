@@ -64,11 +64,11 @@ private extension GifsResponse.GiphyGif {
             let gifURL = URL(string: gifURLString),
             let width = thumbnail.width, let widthInt = Int(width),
             let height = thumbnail.height, let heightInt = Int(height),
-            let thumbnailVideo = BaseMedia(urlString: thumbnail.mp4,
-                                           fileExtension: GiphyConstants.mp4MediaExtension,
+            let thumbnailVideo = RemoteMedia(urlString: thumbnail.mp4,
+                                             fileExtension: GiphyConstants.mp4MediaExtension,
                                              width: widthInt,
                                              height: heightInt,
-                                             contentType: .video)
+                                             mediaType: .video)
         else {
             return nil
         }

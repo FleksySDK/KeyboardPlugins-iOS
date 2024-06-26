@@ -17,19 +17,19 @@ public struct GifContent: BaseContent {
     /// A unique identifier of the gif content.
     public var id: String
     var gifURL: URL
-    var thumbnailVideo: BaseMedia
+    var thumbnailVideo: RemoteMedia
     
     /// The media to be shown to the user. For the GiphyApp, this content consists of a low-res video (for better performance).
-    public var viewMedia: BaseFleksyApp.BaseMedia { thumbnailVideo }
+    public var contentType: BaseContentType { .remoteMedia(thumbnailVideo) }
     
     private static let poweredByGiphyID = "Powered_By_Giphy"
     static let poweredByGiphyGif: GifContent? = {
-        let logoVideoMedia = BaseMedia(url: GiphyConstants.logoThumbnailVideoURL,
-                                       fileExtension: "mp4",
-                                       width: 100,
-                                       height: 140,
-                                       contentType: .video)
-            
+        let logoVideoMedia = RemoteMedia(url: GiphyConstants.logoThumbnailVideoURL,
+                                         fileExtension: "mp4",
+                                         width: 100,
+                                         height: 140,
+                                         mediaType: .video)
+        
         return Self(id: poweredByGiphyID,
                     gifURL: GiphyConstants.logoGifURL,
                     thumbnailVideo: logoVideoMedia)

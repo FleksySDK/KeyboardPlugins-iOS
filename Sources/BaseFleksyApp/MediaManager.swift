@@ -28,54 +28,53 @@ actor MediaManager {
     }
     
     
-    nonisolated func localFileURL(for result: any BaseContent) -> URL {
-        getLocalURLForMedia(mediaId: result.id, fileExtension: result.viewMedia.fileExtension)
+    nonisolated func localFileURL(id: String, for remoteMedia: RemoteMedia) -> URL {
+        getLocalURLForMedia(id: id, fileExtension: remoteMedia.fileExtension)
     }
     
     /// Downloads the speficied media.
     /// - Parameters:
-    ///   - content: The `BaseContent` whose media to download.
-    ///   - mediaId: The id of the media. This is used as the identifier for the final local url where the downloaded file gets saved.
-    ///   - forceDownload: When `true`, download of the file is triggered even if a file for the given `mediaId` already exists locally.
+    ///   - id: The id of the media. This is used as the identifier for the final local url where the downloaded file gets saved.
+    ///   - remoteMedia: The `RemoteMedia` to download.
+    ///   - forceDownload: When `true`, download of the file is triggered even if a file for the given `id` already exists locally.
     /// - Returns: a `Result` object containing the local url where the media has been saved in case of successful download.
     ///
     /// If the media already exists at the expected local url, it immediately returns the successful result containing the local url where the media is stored, without downloading it again.
-    func downloadMediaIfNeeded(from content: any BaseContent, forceDownload: Bool = false) async -> Result<URL, BaseError> {
-        let mediaId = content.id
-        let localMediaURL = getLocalURLForMedia(mediaId: mediaId, fileExtension: content.viewMedia.fileExtension)
+    func downloadMediaIfNeeded(id: String, for remoteMedia: RemoteMedia, forceDownload: Bool = false) async -> Result<URL, BaseError> {
+        let localMediaURL = getLocalURLForMedia(id: id, fileExtension: remoteMedia.fileExtension)
         
         if !forceDownload && FileManager.default.fileExists(atPath: localMediaURL.path) {
             // Local file already exists
             return .success(localMediaURL)
         }
         
-        if let task = activeTasks[mediaId], !task.isCancelled {
+        if let task = activeTasks[id], !task.isCancelled {
             // Download task already happening; just wait
             return await task.value
         }
         
         // Trigger download
-        let task = downloadTask(media: content.viewMedia, mediaId: mediaId, saveTo: localMediaURL)
-        activeTasks[mediaId] = task
+        let task = downloadTask(media: remoteMedia, id: id, saveTo: localMediaURL)
+        activeTasks[id] = task
         
         return await task.value
     }
     
-    func cancelMediaDownload(for result: any BaseContent) {
-        activeTasks[result.id]?.cancel()
+    func cancelMediaDownload(id: String) {
+        activeTasks[id]?.cancel()
     }
     
-    nonisolated private func getLocalURLForMedia(mediaId: String, fileExtension: String) -> URL {
+    nonisolated private func getLocalURLForMedia(id: String, fileExtension: String) -> URL {
         let baseURL: URL
         if #available(iOS 16.0, *) {
-            baseURL = mediaDirectory.appending(path: mediaId, directoryHint: .notDirectory)
+            baseURL = mediaDirectory.appending(path: id, directoryHint: .notDirectory)
         } else {
-            baseURL = mediaDirectory.appendingPathComponent(mediaId, isDirectory: false)
+            baseURL = mediaDirectory.appendingPathComponent(id, isDirectory: false)
         }
         return baseURL.appendingPathExtension(fileExtension)
     }
     
-    private func downloadTask(media: BaseMedia, mediaId: String, saveTo localMediaURL: URL) -> MediaTask {
+    private func downloadTask(media: RemoteMedia, id: String, saveTo localMediaURL: URL) -> MediaTask {
         return MediaTask.detached(priority: .userInitiated) { [weak self] in
             guard let self = self else {
                 return .failure(.cancelled)
@@ -116,15 +115,15 @@ actor MediaManager {
                 }
             }
             
-            await self.removeActiveTaskFor(mediaId: mediaId)
+            await self.removeActiveTaskFor(id: id)
             return result
         }
     }
     
     // MARK: - Private methods
     
-    private func removeActiveTaskFor(mediaId: String) {
-        activeTasks[mediaId] = nil
+    private func removeActiveTaskFor(id: String) {
+        activeTasks[id] = nil
     }
     
     private static func localMediaDirectory(for appId: String) -> URL {

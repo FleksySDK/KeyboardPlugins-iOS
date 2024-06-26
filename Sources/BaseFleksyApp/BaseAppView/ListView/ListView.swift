@@ -120,15 +120,23 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
     
     private func provideCell(collectionView: UICollectionView, indexPath: IndexPath, content: Content) -> UICollectionViewCell? {
         let cell: UICollectionViewCell?
-        switch content.viewMedia.contentType {
-        case .video:
-            let videoCell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: VideoCell.self), for: indexPath) as? VideoCell
-            videoCell?.appTheme = appTheme
-            cell = videoCell
-        case .image:
-            let imageCell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: ImageCell.self), for: indexPath) as? ImageCell
-            imageCell?.appTheme = appTheme
-            cell = imageCell
+        switch content.contentType {
+        case .remoteMedia(let remoteMedia):
+            switch remoteMedia.mediaType {
+            case .video:
+                let videoCell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: VideoCell.self), for: indexPath) as? VideoCell
+                videoCell?.appTheme = appTheme
+                cell = videoCell
+            case .image:
+                let imageCell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: ImageCell.self), for: indexPath) as? ImageCell
+                imageCell?.appTheme = appTheme
+                cell = imageCell
+            }
+        case .html(let string, let width, let height):
+            let webViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: WebViewCell.self), for: indexPath) as? WebViewCell
+            webViewCell?.appTheme = appTheme
+            webViewCell?.loadHTML(string, expectedContentSize: CGSize(width: width, height: height))
+            cell = webViewCell
         }
         
         let index = indexPath.item
@@ -170,6 +178,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
     private func registerCells() {
         self.collectionView.register(ImageCell.self, forCellWithReuseIdentifier: String(describing: ImageCell.self))
         self.collectionView.register(VideoCell.self, forCellWithReuseIdentifier: String(describing: VideoCell.self))
+        self.collectionView.register(WebViewCell.self, forCellWithReuseIdentifier: String(describing: WebViewCell.self))
     }
     
     private func updateLayout() {
@@ -203,20 +212,19 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
         }
         
         let index = indexPath.item
-        guard let url = delegate.localURLForContentAt(index: index) else {
-            return
-        }
-        
+
         switch cell {
         case let videoCell as VideoCell:
-            if !videoCell.loadMedia(localURL: url, autoplay: true) {
+            if let url = delegate.localURLForContentAt(index: index),
+               !videoCell.loadMedia(localURL: url, autoplay: true) {
                 Task.detached {
                     await delegate.loadContentAt(index: index)
                     await videoCell.forceLoadMedia(localURL: url, autoplay: true)
                 }
             }
         case let imageCell as ImageCell:
-            if !imageCell.loadImage(localURL: url) {
+            if let url = delegate.localURLForContentAt(index: index),
+               !imageCell.loadImage(localURL: url) {
                 Task.detached {
                     await delegate.loadContentAt(index: index)
                     await imageCell.forceLoadImage(localURL: url)
