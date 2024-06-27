@@ -31,7 +31,6 @@ class GiphyService {
     private let giphyApiKey: String
     
     var language: String?
-    private var currentGifDataTask: Task<GifDataResult, Never>?
     
     // MARK: - Init
     

@@ -116,7 +116,7 @@ private extension MediaShareResponse.Content {
         else {
             return nil
         }
-        return MediaShareContent(id: id, contentURL: shareFileURL, pasteboardType: pasteboardType,  contentType: .remoteMedia(thumbnailMedia))
+        return MediaShareContent(id: id, contentURL: shareFileURL, pasteboardType: pasteboardType, contentType: .remoteMedia(thumbnailMedia))
     }
 }
 

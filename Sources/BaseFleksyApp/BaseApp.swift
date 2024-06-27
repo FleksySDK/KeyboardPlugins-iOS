@@ -334,10 +334,10 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     
     @discardableResult
     private func performInitialLoads() -> Task<(), Never> {
-        Task(priority: .userInitiated) {
-            await appView?.showLoader()
-            await performGetCategories().value
-            performDefaultRequest()
+        Task(priority: .userInitiated) { [weak self] in
+            await self?.appView?.showLoader()
+            await self?.performGetCategories().value
+            self?.performDefaultRequest()
         }
     }
     
@@ -401,9 +401,9 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         
         let task = Task(priority: .userInitiated) { () -> BaseContentResult in
             if pagination.isFirstPage {
-                await MainActor.run {
-                    appView?.showLoader()
-                    currentContents = []
+                await MainActor.run { [weak self] in
+                    self?.appView?.showLoader()
+                    self?.currentContents = []
                 }
             }
             
@@ -413,18 +413,18 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
                 return .failure(.cancelled)
             }
             
-            return await MainActor.run { () -> BaseContentResult in
+            return await MainActor.run { [weak self] () -> BaseContentResult in
                 switch result {
                 case .success(let contents):
                     appendContentsRemovingDuplicates(contents)
-                    appView?.hideErrorMessage()
-                    appView?.hideLoader()
+                    self?.appView?.hideErrorMessage()
+                    self?.appView?.hideLoader()
                 case .failure(let error):
                     let errorMsg = getErrorMessageForError(error)
-                    appView?.showErrorMessage(errorMsg)
-                    appView?.hideLoader()
+                    self?.appView?.showErrorMessage(errorMsg)
+                    self?.appView?.hideLoader()
                 }
-                self.activeContentsTask = nil
+                self?.activeContentsTask = nil
                 return result
             }
         }
@@ -440,11 +440,11 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         if let activeCategoriesTask {
             return activeCategoriesTask
         }
-        let categoriesTask = Task {
-            let categories = await self.getCategories()
-            await MainActor.run {
-                currentCategories = categories
-                appView?.reloadCategories(categories)
+        let categoriesTask = Task { [weak self] in
+            guard let categories = await self?.getCategories() else { return }
+            await MainActor.run { [weak self] in
+                self?.currentCategories = categories
+                self?.appView?.reloadCategories(categories)
             }
         }
         activeCategoriesTask = categoriesTask
@@ -560,12 +560,11 @@ extension BaseApp: BaseAppViewDelegate {
         
         if !contentsToFetch.isEmpty {
             Task.detached(priority: .userInitiated) {
-                await withTaskGroup(of: Void.self) { [weak self] group in
-                    guard let self else { return }
+                await withTaskGroup(of: Void.self) { group in
                     for content in contentsToFetch {
                         if case .remoteMedia(let remoteMedia) = content.contentType {
-                            group.addTask(priority: .userInitiated) {
-                                _ = await self.mediaManager.downloadMediaIfNeeded(id: content.id, for: remoteMedia)
+                            group.addTask(priority: .userInitiated) { [weak self] in
+                                _ = await self?.mediaManager.downloadMediaIfNeeded(id: content.id, for: remoteMedia)
                             }
                         }
                     }
@@ -598,8 +597,8 @@ extension BaseApp: BaseAppViewDelegate {
                     .filter { $0 < currentContents.count }
                     .forEach {
                         let result = currentContents[$0]
-                        group.addTask {
-                            await self.mediaManager.cancelMediaDownload(id: result.id)
+                        group.addTask { [weak self] in
+                            await self?.mediaManager.cancelMediaDownload(id: result.id)
                         }
                     }
             }

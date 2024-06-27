@@ -75,7 +75,7 @@ actor MediaManager {
     }
     
     private func downloadTask(media: RemoteMedia, id: String, saveTo localMediaURL: URL) -> MediaTask {
-        return MediaTask.detached(priority: .userInitiated) { [weak self] in
+        return MediaTask(priority: .userInitiated) { [weak self] in
             guard let self = self else {
                 return .failure(.cancelled)
             }

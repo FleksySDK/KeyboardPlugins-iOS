@@ -144,10 +144,8 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
         let index = indexPath.item
         
         assert(delegate != nil, "ListViewDelegate must be set")
-        if let delegate {
-            Task.detached(priority: .userInitiated) {
-                await delegate.loadContentAt(index:index)
-            }
+        Task(priority: .userInitiated) { [weak delegate] in
+            await delegate?.loadContentAt(index:index)
         }
         return cell
     }
@@ -227,7 +225,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
         case let imageCell as ImageCell:
             if let url = delegate.localURLForContentAt(index: index),
                !imageCell.loadImage(localURL: url) {
-                Task.detached {
+                Task {
                     await delegate.loadContentAt(index: index)
                     await imageCell.forceLoadImage(localURL: url)
                 }

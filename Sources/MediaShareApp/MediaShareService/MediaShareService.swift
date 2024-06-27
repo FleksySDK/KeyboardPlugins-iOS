@@ -34,9 +34,7 @@ class MediaShareService {
     private let contentType: MediaShareRequestDTO.ContentType
     private let MediaShareApiKey: String
     private let sdkLicenseId: String
-    
-    private var currentGifDataTask: Task<ContentDataResult, Never>?
-    
+        
     // MARK: - Init
     
     init(contentType: MediaShareApp.ContentType, MediaShareApiKey: String, sdkLicenseId: String) {
@@ -57,10 +55,10 @@ class MediaShareService {
         return await makeMediaShareAPIRequest(request)
     }
     
-func getTags(timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<PopularTagsResponse, BaseError> {
-    let request = createContentRequest(for: .tags, timeout: timeout)
-    return await makeMediaShareAPIRequest(request)
-}
+    func getTags(timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<PopularTagsResponse, BaseError> {
+        let request = createContentRequest(for: .tags, timeout: timeout)
+        return await makeMediaShareAPIRequest(request)
+    }
     
     func getContentData(from content: MediaShareContent, timeout: TimeInterval = MediaShareService.defaultTimeout) async -> ContentDataResult {
         guard let contentURL = content.contentURL else {
