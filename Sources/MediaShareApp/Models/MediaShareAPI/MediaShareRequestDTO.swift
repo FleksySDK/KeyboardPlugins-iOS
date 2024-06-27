@@ -61,6 +61,7 @@ struct MediaShareRequestDTO: Encodable {
         case .search(let page, let query):
             try container.encode("search", forKey: .feature)
             try container.encode(query, forKey: .query)
+            try container.encode(page, forKey: .page)
         }
     }
 }
