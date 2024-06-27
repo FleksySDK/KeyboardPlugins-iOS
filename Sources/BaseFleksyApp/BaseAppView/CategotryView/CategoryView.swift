@@ -22,7 +22,9 @@ class CategoryView<Category: BaseCategory>: UIView, UICollectionViewDelegate {
     
     private weak var delegate: CategoryViewDelegate?
     
-    private(set) lazy var dataSource = UICollectionViewDiffableDataSource<Int, Category>(collectionView: collectionView, cellProvider: provideCell(collectionView:indexPath:category:))
+    private(set) lazy var dataSource = UICollectionViewDiffableDataSource<Int, Category>(collectionView: collectionView) { [weak self] collectionView, indexPath, category in
+        self?.provideCell(collectionView: collectionView, indexPath: indexPath, category: category)
+    }
     
     var selectedIndex: Int? {
         collectionView.indexPathsForSelectedItems?.first?.item

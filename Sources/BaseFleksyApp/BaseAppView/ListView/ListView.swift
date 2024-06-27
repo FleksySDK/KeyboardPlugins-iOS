@@ -89,7 +89,9 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
     }
     private weak var delegate: ListViewDelegate?
     
-    private(set) lazy var dataSource = UICollectionViewDiffableDataSource<Int, Content>(collectionView: collectionView, cellProvider: provideCell(collectionView:indexPath:content:))
+    private(set) lazy var dataSource = UICollectionViewDiffableDataSource<Int, Content>(collectionView: collectionView) { [weak self] collectionView, indexPath, category in
+        self?.provideCell(collectionView:collectionView, indexPath:indexPath, content:category)
+    }
     
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: self.createLayout())
     
