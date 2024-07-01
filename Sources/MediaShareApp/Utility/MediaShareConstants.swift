@@ -66,12 +66,11 @@ enum MediaShareConstants {
     
     
     static func appIcon(for contentType: MediaShareApp.ContentType) -> UIImage? {
-        let systemImageName = switch contentType {
-        case .clips: "video.circle"
-        case .gifs: "gifIcon"
-        case .stickers: "photo.on.rectangle.angled"
+        return switch contentType {
+        case .clips: UIImage(systemName: "video.circle")
+        case .gifs: UIImage(named: "gifIcon", in: .module, with: nil)
+        case .stickers: UIImage(systemName: "photo.on.rectangle.angled")
         }
-        return UIImage(systemName: systemImageName)
     }
     
     static let mp4MediaExtension = "mp4"

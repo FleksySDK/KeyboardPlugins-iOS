@@ -25,7 +25,8 @@ let package = Package(
             ]),
         .target(
             name: "MediaShareApp",
-            dependencies: ["BaseFleksyApp"]
+            dependencies: ["BaseFleksyApp"],
+            resources: [.process("Media.xcassets")]
         ),
         .target(
             name: "GiphyApp",
