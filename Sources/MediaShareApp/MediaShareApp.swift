@@ -61,16 +61,9 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     ///
     /// - Important:
     /// The license used (`sdkLicenseKey`) should contain the appropriate capability for the passed `contentType` (see ``ContentType``).
-    public init(contentType: ContentType,  apiKey: String, sdkLicenseKey: String) {
-        let text = switch contentType {
-        case .clips:
-            MediaShareConstants.LocalizedStrings.searchClipsPlaceHolder
-        case .gifs:
-            MediaShareConstants.LocalizedStrings.searchGifsPlaceHolder
-        case .stickers:
-            MediaShareConstants.LocalizedStrings.searchStickersPlaceHolder
-        }
-        let configuration = BaseConfiguration(searchPlaceholder: text, searchButtonText: text)
+    public init(contentType: ContentType, apiKey: String, sdkLicenseKey: String) {
+        let configuration = BaseConfiguration(searchPlaceholder: MediaShareConstants.LocalizedStrings.searchPlaceHolder.get(for: contentType),
+                                              searchButtonText: MediaShareConstants.LocalizedStrings.searchButtonText.get(for: contentType))
         self.service = MediaShareService(contentType: contentType, MediaShareApiKey: apiKey, sdkLicenseId: sdkLicenseKey)
         self.contentType = contentType
         super.init(id: Self.appId(forContentType: contentType), configuration: configuration)
@@ -79,7 +72,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     /// Gets the default content page for the app.
     /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func getDefaultContentsFor(pagination: Pagination) async -> Result<[MediaShareContent], BaseError> {
-        await setSelectedCategory(MediaShareCategory.trendingCategory)
+        await setSelectedCategory(MediaShareCategory.trendingCategory(for: contentType))
         return await service.getContent(.trending(page: pagination.page + 1)).map {
             $0.toResults(contentType: contentType)
         }
@@ -103,7 +96,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     
     public override func getCategories() async -> [MediaShareCategory] {
         let categories = try? await service.getTags().map {
-            $0.toCategories()
+            $0.toCategories(contentType: contentType)
         }.get()
         return categories ?? []
     }
@@ -120,21 +113,21 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
             // With the delay we avoid changing the toast message to the user too quickly.
             // If the gif download takes longer than 0.3 seconds, then the "downloading" message
             // is shown to provide quick feedback.
-            await self.showToast(message: MediaShareConstants.LocalizedStrings.toastDownloading, showLoader: true, delay: MediaShareApp.downloadingToastDelay)
+            await self.showToast(message: MediaShareConstants.LocalizedStrings.toastDownloading.get(for: contentType), showLoader: true, delay: MediaShareApp.downloadingToastDelay)
             let result = await self.service.getContentData(from: content)
             guard !Task.isCancelled else { return }
             
             switch result {
             case .success(let gifData):
                 await self.copyMediaDataToClipboard(gifData, pasteboardType: content.pasteboardType)
-                await self.showToastAndWait(message: MediaShareConstants.LocalizedStrings.toastCopiedAndReady)
+                await self.showToastAndWait(message: MediaShareConstants.LocalizedStrings.toastCopiedAndReady.get(for: contentType))
                 try? await Task.sleep(nanoseconds: MediaShareApp.defaultToastDuration * NSEC_PER_SEC)
                 guard !Task.isCancelled else { return }
                 await self.hideToastAndWait()
                 guard !Task.isCancelled else { return }
                 await self.appListener?.hide()
             case .failure(let error):
-                let message = MediaShareConstants.LocalizedStrings.contentDownloadError + "\n" + error.defaultErrorMessage
+                let message = MediaShareConstants.LocalizedStrings.contentDownloadError.get(for: contentType) + "\n" + error.defaultErrorMessage
                 await self.showToastAndWait(message: message)
                 try? await Task.sleep(nanoseconds: MediaShareApp.defaultToastDuration * NSEC_PER_SEC)
                 guard !Task.isCancelled else { return }

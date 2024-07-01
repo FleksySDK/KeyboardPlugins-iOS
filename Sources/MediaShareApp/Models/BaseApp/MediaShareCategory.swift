@@ -35,5 +35,7 @@ public struct MediaShareCategory: BaseCategory {
         self.query = query
     }
     
-    static let trendingCategory = MediaShareCategory(categoryName: MediaShareConstants.LocalizedStrings.trendingCategoryName, query: "")
+    static func trendingCategory(for contentType: MediaShareApp.ContentType) -> MediaShareCategory {
+        MediaShareCategory(categoryName: MediaShareConstants.LocalizedStrings.trendingCategoryName.get(for: contentType), query: "")
+    }
 }

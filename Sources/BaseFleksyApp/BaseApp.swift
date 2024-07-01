@@ -414,17 +414,18 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
             }
             
             return await MainActor.run { [weak self] () -> BaseContentResult in
+                guard let self else { return result }
                 switch result {
                 case .success(let contents):
-                    appendContentsRemovingDuplicates(contents)
-                    self?.appView?.hideErrorMessage()
-                    self?.appView?.hideLoader()
+                    self.appendContentsRemovingDuplicates(contents)
+                    self.appView?.hideErrorMessage()
+                    self.appView?.hideLoader()
                 case .failure(let error):
-                    let errorMsg = getErrorMessageForError(error)
-                    self?.appView?.showErrorMessage(errorMsg)
-                    self?.appView?.hideLoader()
+                    let errorMsg = self.getErrorMessageForError(error)
+                    self.appView?.showErrorMessage(errorMsg)
+                    self.appView?.hideLoader()
                 }
-                self?.activeContentsTask = nil
+                self.activeContentsTask = nil
                 return result
             }
         }

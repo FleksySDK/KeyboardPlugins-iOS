@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.9
 
 import PackageDescription
 
@@ -10,8 +10,8 @@ let package = Package(
             name: "FleksyApps",
             targets: [
                 "BaseFleksyApp",
-                "GiphyApp",
-                "MediaShareApp"]
+                "MediaShareApp",
+                "GiphyApp"]
         ),
     ],
     dependencies: [
@@ -24,13 +24,13 @@ let package = Package(
                 .product(name: "FleksyAppsCore", package: "ios-fleksyappscore"),
             ]),
         .target(
+            name: "MediaShareApp",
+            dependencies: ["BaseFleksyApp"]
+        ),
+        .target(
             name: "GiphyApp",
             dependencies: ["BaseFleksyApp"],
             resources: [.process("Media.xcassets")]
-        ),
-        .target(
-            name: "MediaShareApp",
-            dependencies: ["BaseFleksyApp"]
         ),
     ]
 )

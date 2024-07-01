@@ -227,7 +227,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
                !imageCell.loadImage(localURL: url) {
                 Task {
                     await delegate.loadContentAt(index: index)
-                    await imageCell.forceLoadImage(localURL: url)
+                    imageCell.forceLoadImage(localURL: url)
                 }
             }
         default:

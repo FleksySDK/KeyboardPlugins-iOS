@@ -16,13 +16,13 @@ struct PopularTagsResponse: Decodable {
 
 extension PopularTagsResponse {
     
-    func toCategories() -> [MediaShareCategory] {
+    func toCategories(contentType: MediaShareApp.ContentType) -> [MediaShareCategory] {
         guard let tags, !tags.isEmpty else {
             return []
         }
         let categories = tags.map {
             MediaShareCategory(name: $0)
         }
-        return [MediaShareCategory.trendingCategory] + (categories ?? [])
+        return [MediaShareCategory.trendingCategory(for: contentType)] + categories
     }
 }
