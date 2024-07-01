@@ -10,6 +10,7 @@ This repository contains a collection of iOS FleksyApps: add-ons for keyboard ex
 
 It includes the `BaseApp` template that makes the process of creating certain style of FleksyApps a lot easier and faster.
 It also contains some ready-to-use apps to add directly to your keyboard extension:
+* [MediaShareApp](Sources/MediaShareApp/): A FleksyApp powered by Fleksy that allows the user to search and copy media content: gifs, clips or stickers.
 * [GiphyApp](Sources/GiphyApp/): A FleksyApp powered by Giphy that allows the user to search and copy gifs.
 
 # Installation
@@ -26,14 +27,14 @@ Remember: in order to use the FleksyApps in your keyboard extension you need to 
 If you want to make use of the `BaseFleksyApp` to create your own FleksyApps, you can add the FleksyApps package as a dependency by adding it to the `dependencies` value of your `Package.swift`:
 ```swift
 dependencies: [
-    .package(url: "https://github.com/FleksySDK/fleksyapps-iOS.git", .upToNextMajor(from: "1.0.0"))
+    .package(url: "https://github.com/FleksySDK/fleksyapps-iOS.git", .upToNextMajor(from: "2.0.0"))
 ]
 ```
 
 # Requirements
 
 * This package requires a minimum deployment version of iOS 13.
-* This package requires Xcode 14 or higher (Swift 5.7+).
+* This package requires Xcode 15.2 or higher (Swift 5.9+).
 
 
 # How to get help? 🙋
