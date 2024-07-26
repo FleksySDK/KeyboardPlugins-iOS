@@ -16,7 +16,7 @@ Currently, the `BaseApp` only supports showing the following content types (see 
 * Videos.
 * HTML.
 
-Below we will illustrate this guide with the example of the `GiphyApp`, which is a FleksyApp built using the BaseFleksyApp. 
+Below we will illustrate this guide with the example of the `MediaShareApp`, which is a FleksyApp built using the BaseFleksyApp. 
 
 ### The media content object
 
@@ -24,17 +24,17 @@ The first thing you need is a type that represents each media content item to be
 
 Basically, each media item needs to have a unique identifier and declare a ``BaseContentType`` via the ``BaseContent/contentType`` property. For presenting an image or video, use the ``BaseContentType/remoteMedia(_:)`` case, where the ``RemoteMedia`` associated object contains all the information required for the ``BaseApp`` class to download and show the content of the media item. Note that the ``RemoteMedia/mediaType-swift.property`` is the value that determines the type of media content presented to the user in the media carousel.
 
-For example, the Giphy app uses the `GifContent`:
+For example, the MediaShare app uses the `MediaShareContent`:
 
 ```swift
-public struct GifContent: BaseContent {
-    var gifURL: URL
-    var thumbnailVideo: RemoteMedia
-    
+public struct MediaShareContent: BaseContent {
+    var contentURL: URL?
+    var pasteboardType: String
+
     // BaseContent protocol conformance:
 
-    public var contentType: BaseContentType { .remoteMedia(thumbnailVideo) }
     public var id: String
+    public var contentType: BaseContentType
 }
 ```
 
@@ -50,10 +50,10 @@ You can **optionally** provide the user with an array of items that can be used,
 
 Each category item needs a unique identifier and the user-facing name of the category.
 
-The Giphy app uses the `GifsCategory` struct for this purpose and these categories are, in fact, shorcuts for trending searches.
+The MediaShare app uses the `MediaShareCategory` struct for this purpose and these categories are, in fact, shortcuts for trending searches.
 
 ```swift
-public struct GifsCategory: BaseCategory {
+public struct MediaShareCategory: BaseCategory {
 
     let query: String
 
@@ -73,7 +73,7 @@ This is how the categories are shown in a horizontally scrollable list:
 Once you declare your media content and category types, you are ready to create the main class of your own FleksyApp. This class needs to be a subclass of ``BaseApp`` and should use the types defined before for the two generic types required by ``BaseApp``.
 
 ```swift
-public class GiphyApp: BaseApp<GifContent, GifsCategory> {
+public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory> {
     ...
 }
 ```
@@ -89,7 +89,7 @@ Your ``BaseApp`` subclass must override the following set of methods that are th
 
 There are some additional overridable methods declared in ``BaseApp`` that you can use to customize the behavior of your FleksyApp. 
 
-- ``BaseApp/didSelectContent(_:)`` is the most important one. This method gets executed when the user taps on a content media cell. In the case of the Giphy app, it downloads the selected gif and puts it into the general clipboard  so that the user can later paste it wherever they need. 
+- ``BaseApp/didSelectContent(_:)`` is the most important one. This method gets executed when the user taps on a content media cell. In the case of the MediaShare app, it downloads the selected media content and puts it into the general clipboard, so that the user can later paste it wherever they need. 
 - ``BaseApp/onAppIconAction()``. This is the method that gets called when the user taps on the Fleksy app icon button shown on the left of the in-keyboard search text field. ``BaseApp``'s implementation changes the view mode of the FleksyApp to `.fullCover`. You can override this method to provide custom logic for this event.
 - ``BaseApp/getErrorMessageForError(_:)`` is used to let the user know when an error happens. ``BaseApp``'s implementation returns the default message for each error (see ``BaseError/defaultErrorMessage``). You can override this method in your ``BaseApp`` subclass to customize the error messages.
 
@@ -101,9 +101,9 @@ Finally, the ``BaseApp`` provides some public methods that allow you to change t
 
 If your FleksyApp uses the categories functionality, your ``BaseApp`` subclass can call ``BaseApp/setSelectedCategory(_:)`` to visually select a category when it makes sense. 
 
-For example, in the Giphy app, selecting the category "GOODNIGHT" is functionally the same as searching for the term "GOODNIGHT". Therefore, if the user performs a search with the query "Goodnight", the Giphy app programmatically selects the "GOODNIGHT" category for consistency.
+For example, in the MediaShare app, selecting the category "GOODNIGHT" is functionally the same as searching for the term "GOODNIGHT". Therefore, if the user performs a search with the query "Goodnight", the MediaShare app programmatically selects the "GOODNIGHT" category for consistency.
 
-![An image of the Giphy app showing the search term marching the selected category.](GiphyCategorySelection.png)
+![An image of the MediaShare app showing the search term marching the selected category.](GiphyCategorySelection.png)
 
 ### Showing a message toast
 
@@ -111,6 +111,6 @@ The ``BaseApp`` also provides a set of methods to show/hide a toast with a custo
 - Use ``BaseApp/showToast(message:alignment:showLoader:animationDuration:delay:)`` or ``BaseApp/showToastAndWait(message:alignment:showLoader:animationDuration:delay:)`` to present the message.
 - Use ``BaseApp/hideToast(animationDuration:delay:)`` or ``BaseApp/hideToastAndWait(animationDuration:delay:)`` to hide the message.
 
-The Giphy uses these methods to present a temporary toast message when the user selects a gif to let them know that the gif is copied and ready for them to paste. 
+The MediaShare uses these methods to present a temporary toast message when the user selects a media item to let them know that it has been copied and ready for them to paste. 
 
-![An image of the Giphy app showing a toast message after the user has selected a gif.](GiphyAppToast.png)
+![An image of the MediaShare app showing a toast message after the user has selected a gif.](GiphyAppToast.png)

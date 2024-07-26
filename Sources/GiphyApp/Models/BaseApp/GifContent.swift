@@ -12,6 +12,7 @@ import BaseFleksyApp
 /// The type for the generic type `ContentType` in `BaseApp`.
 ///
 /// - Important: You need not use this type. This type is public only because it conforms to the `BaseContent` protocol declared in the `BaseApp`.
+@available(*, deprecated, message: "The GiphyApp has been deprecated and will be removed in the future. It has been replaced by the MediaShareApp from the same Swift Package, which, besides Gifs, also supports Clip videos and Stickers")
 public struct GifContent: BaseContent {
     
     /// A unique identifier of the gif content.
