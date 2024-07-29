@@ -14,6 +14,8 @@ struct MediaShareRequestDTO: Encodable {
     }
     
     enum Feature {
+        case healthCheck
+        
         case tags
         
         /// Trending content.
@@ -34,25 +36,34 @@ struct MediaShareRequestDTO: Encodable {
         case query = "keyword"
         case tags
         case page
-        case adWidth
-        case adHeight
+        
+        case adMinWidth
+        case adMaxWidth
+        case adMinHeight
+        case adMaxHeight
     }
     
     let content: ContentType
     let feature: Feature
     let userId: String = (UIDevice.current.identifierForVendor ?? UUID()).uuidString
     let platform: String = "ios"
-    let adWidth: Int = 100
-    let adHeight: Int = 100
-    
+    let adMinWidth: Int = 100
+    let adMaxWidth: Int = 320
+    let adMinHeight: Int = 100
+    let adMaxHeight: Int = 250
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(content, forKey: .content)
         try container.encode(userId, forKey: .userId)
         try container.encode(platform, forKey: .platform)
-        try container.encode(adWidth, forKey: .adWidth)
-        try container.encode(adHeight, forKey: .adHeight)
+        try container.encode(adMinWidth, forKey: .adMinWidth)
+        try container.encode(adMaxWidth, forKey: .adMaxWidth)
+        try container.encode(adMinHeight, forKey: .adMinHeight)
+        try container.encode(adMaxHeight, forKey: .adMaxHeight)
+        
         switch feature {
+        case .healthCheck:
+            try container.encode("preFillAds", forKey: .feature)
         case .tags:
             try container.encode("tags", forKey: .feature)
         case .trending(let page):

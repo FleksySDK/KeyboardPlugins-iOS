@@ -34,6 +34,8 @@ class MediaShareService {
     private let contentType: MediaShareRequestDTO.ContentType
     private let MediaShareApiKey: String
     private let sdkLicenseId: String
+    
+    @MainActor private var healthCheckTask: Task<HealthCheckResponse, Error>?
         
     // MARK: - Init
     
@@ -46,6 +48,8 @@ class MediaShareService {
     // MARK: - Interface methods
     
     func getContent(_ content: Content, timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<MediaShareResponse, BaseError> {
+        await performHealthCheckRequestIfNeeded(timeout: timeout)
+        
         let feature: MediaShareRequestDTO.Feature = switch content {
         case .trending(let page): .trending(page: page)
         case .search(let query, let page): .search(page: page, query: query)
@@ -56,6 +60,7 @@ class MediaShareService {
     }
     
     func getTags(timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<PopularTagsResponse, BaseError> {
+        await performHealthCheckRequestIfNeeded(timeout: timeout)
         let request = createContentRequest(for: .tags, timeout: timeout)
         return await makeMediaShareAPIRequest(request)
     }
@@ -70,9 +75,22 @@ class MediaShareService {
     }
     
     // MARK: - Private methods
-        
+
+    @MainActor private func performHealthCheckRequestIfNeeded(timeout: TimeInterval = MediaShareService.defaultTimeout) async  {
+        if let healthCheckTask {
+            _ = await healthCheckTask.result
+        } else {
+            healthCheckTask = Task {
+                let request = createContentRequest(for: .healthCheck, timeout: timeout)
+                let result: Result<HealthCheckResponse, BaseError> = await makeMediaShareAPIRequest(request)
+                return try result.get()
+            }
+            _ = await healthCheckTask?.result
+        }
+    }
+    
     private func createContentRequest(for feature: MediaShareRequestDTO.Feature, timeout: TimeInterval) -> URLRequest {
-        let MediaShareRequestDTO = MediaShareRequestDTO(content: contentType, feature: feature)
+        let mediaShareRequestDTO = MediaShareRequestDTO(content: contentType, feature: feature)
         var request = URLRequest(url: Self.apiURL)
         
         request.httpMethod = "POST"
@@ -84,7 +102,7 @@ class MediaShareService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
-        let jsonBody = try? JSONEncoder().encode(MediaShareRequestDTO)
+        let jsonBody = try? JSONEncoder().encode(mediaShareRequestDTO)
         assert(jsonBody != nil, "Error when encoding MediaShareRequestDTO object")
         request.httpBody = jsonBody
         
