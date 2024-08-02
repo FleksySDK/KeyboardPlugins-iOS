@@ -148,10 +148,20 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     
     @MainActor
     private func copyMediaDataToClipboard(_ mediaData: Data, content: MediaShareContent) {
-        var item: [String : Any] = [content.pasteboardType : mediaData]
-        if let contentURL = content.contentURL {
-            item[MediaShareConstants.urlPastboardType] = contentURL
+         //[content.pasteboardType : mediaData]
+        guard let contentURL = content.contentURL else {
+            return
         }
-        UIPasteboard.general.items = [item]
+            
+        let tempFileURL = FileManager.default.temporaryDirectory.appendingPathComponent(contentURL.lastPathComponent)
+        do {
+            try mediaData.write(to: tempFileURL)
+        } catch {
+            print("Failed to write media content to \(contentURL): \(error)")
+        }
+        let item: [String: Any] = [
+            content.pasteboardType : tempFileURL,
+            MediaShareConstants.urlPastboardType : contentURL,
+        ]
     }
 }
