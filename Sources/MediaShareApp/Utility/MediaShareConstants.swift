@@ -97,6 +97,14 @@ enum MediaShareConstants {
         "com.compuserve.gif"
     }
     
-    
+    static let urlPastboardType: String = if #available(iOS 14.0, *) {
+#if canImport(UniformTypeIdentifiers)
+        UTType.url.identifier
+#else
+        "public.url"
+#endif
+    } else {
+        "public.url"
+    }
 }
 

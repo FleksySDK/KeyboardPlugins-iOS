@@ -119,7 +119,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
             
             switch result {
             case .success(let gifData):
-                await self.copyMediaDataToClipboard(gifData, pasteboardType: content.pasteboardType)
+                await self.copyMediaDataToClipboard(gifData, content: content)
                 await self.showToastAndWait(message: MediaShareConstants.LocalizedStrings.toastCopiedAndReady.get(for: contentType))
                 try? await Task.sleep(nanoseconds: MediaShareApp.defaultToastDuration * NSEC_PER_SEC)
                 guard !Task.isCancelled else { return }
@@ -147,7 +147,11 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     }
     
     @MainActor
-    private func copyMediaDataToClipboard(_ mediaData: Data, pasteboardType: String) {
-        UIPasteboard.general.setData(mediaData, forPasteboardType: pasteboardType)
+    private func copyMediaDataToClipboard(_ mediaData: Data, content: MediaShareContent) {
+        var item: [String : Any] = [content.pasteboardType : mediaData]
+        if let contentURL = content.contentURL {
+            item[MediaShareConstants.urlPastboardType] = contentURL
+        }
+        UIPasteboard.general.items = [item]
     }
 }
