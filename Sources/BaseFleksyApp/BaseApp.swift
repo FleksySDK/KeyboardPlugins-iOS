@@ -452,7 +452,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         return categoriesTask
     }
     
-    /// This method appends `contents` to `currentContents` but removing duplicates (e.g. the Giphy API sometimes returns duplicated items, with the same identifier).
+    /// This method appends `contents` to `currentContents` but removing duplicates (in case the API sometimes returns items with the same identifier).
     @MainActor
     private func appendContentsRemovingDuplicates(_ contents: [ContentType]) {
         for newItem in contents {

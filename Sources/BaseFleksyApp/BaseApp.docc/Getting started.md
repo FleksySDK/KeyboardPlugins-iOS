@@ -103,7 +103,7 @@ If your FleksyApp uses the categories functionality, your ``BaseApp`` subclass c
 
 For example, in the MediaShare app, selecting the category "GOODNIGHT" is functionally the same as searching for the term "GOODNIGHT". Therefore, if the user performs a search with the query "Goodnight", the MediaShare app programmatically selects the "GOODNIGHT" category for consistency.
 
-![An image of the MediaShare app showing the search term marching the selected category.](GiphyCategorySelection.png)
+![An image of the MediaShare app showing the search term marching the selected category.](MediaShareCategorySelection.png)
 
 ### Showing a message toast
 
@@ -113,4 +113,4 @@ The ``BaseApp`` also provides a set of methods to show/hide a toast with a custo
 
 The MediaShare uses these methods to present a temporary toast message when the user selects a media item to let them know that it has been copied and ready for them to paste. 
 
-![An image of the MediaShare app showing a toast message after the user has selected a gif.](GiphyAppToast.png)
+![An image of the MediaShare app showing a toast message after the user has selected a gif.](MediaShareAppToast.png)

@@ -1,4 +1,4 @@
-//  GiphyLayout.swift
+//  MosaicLayout.swift
 //  FleksyApps
 //
 //  Copyright © 2023 Thingthing. All rights reserved.
