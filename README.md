@@ -11,7 +11,7 @@ This repository contains a collection of iOS FleksyApps: add-ons for keyboard ex
 It includes the `BaseApp` template that makes the process of creating certain style of FleksyApps a lot easier and faster.
 It also contains some ready-to-use apps to add directly to your keyboard extension:
 * [MediaShareApp](Sources/MediaShareApp/): A FleksyApp powered by Fleksy that allows the user to search and copy media content: gifs, clips or stickers.
-* [GiphyApp](Sources/GiphyApp/): A FleksyApp powered by Giphy that allows the user to search and copy gifs.
+* [GiphyApp](Sources/GiphyApp/): A FleksyApp powered by Giphy that allows the user to search and copy gifs. **Important: The GiphyApp has been deprecated** and will be removed in the future. It has been replaced by the MediaShareApp, which, besides Gifs, also supports Clip videos and Stickers.
 
 # Installation
 
