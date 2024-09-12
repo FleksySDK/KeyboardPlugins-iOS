@@ -18,9 +18,6 @@ enum GiphyConstants {
         static let searchPlaceHolder = NSLocalizedString("Giphy.SearchPlaceholder", value: "Search for gifs...", comment: "The placeholder of the keyboard textfield")
         static let toastDownloading = NSLocalizedString("Giphy.Toast.Downloading", value: "Downloading", comment: "The text to show in the toast while the gif selected by the user is being downloaded")
         static let toastCopiedAndReady = NSLocalizedString("Giphy.Toast.CopiedAndReady", value: "Copied and ready to paste!", comment: "The text to show in the toast once the selected gif has completed downloading, is copied to the clipboard and ready to be pasted in applications")
-        
-        static let noGifsError = NSLocalizedString("Giphy.Error.NoGifs", value: "Currently there are no gifs available.", comment: "Represents an error or information about the absence of gifs shown")
-        
         static let gifDownloadError = NSLocalizedString("Giphy.Error.download", value: "The gif couldn't download", comment: "The text shown when the user taps a gif but the gif download fails")
     }
     

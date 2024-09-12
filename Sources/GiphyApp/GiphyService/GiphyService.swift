@@ -7,7 +7,7 @@
 import Foundation
 import BaseFleksyApp
 
-/// The class that manages the  Giphy requests and the download of the gifs to be shared by the user.
+/// The class that manages the Giphy requests and the download of the gifs to be shared by the user.
 ///
 /// The ``GiphyApp`` uses this class to make the requests to the Giphy servers.
 class GiphyService {
@@ -31,7 +31,6 @@ class GiphyService {
     private let giphyApiKey: String
     
     var language: String?
-    private var currentGifDataTask: Task<GifDataResult, Never>?
     
     // MARK: - Init
     

@@ -25,8 +25,11 @@ class ImageCell: BaseAppCell<UIImageView> {
     @MainActor
     func loadImage(localURL: URL) -> Bool {
         fileURL = localURL
+        hideContentError()
         let imageLoaded = setImageFromFileAt(url: localURL)
-        if !imageLoaded {
+        if imageLoaded {
+            hideLoader()
+        } else {
             showLoader()
         }
         return imageLoaded
@@ -42,10 +45,10 @@ class ImageCell: BaseAppCell<UIImageView> {
             return
         }
         let imageLoaded = setImageFromFileAt(url: localURL)
+        hideLoader()
         if imageLoaded {
             hideContentError()
         } else {
-            hideLoader()
             showContentError()
         }
     }

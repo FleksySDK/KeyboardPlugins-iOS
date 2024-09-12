@@ -62,20 +62,20 @@ class VideoPlayerView: UIView {
     @MainActor
     func setVideoWithUrl(_ url: URL, startPlayback: Bool = true, onVideoLoaded: @escaping @MainActor () -> Void ) {
         resetVideoPlayer()
-        videoLoadTask = Task.detached(priority: .background) {
+        videoLoadTask = Task.detached(priority: .background) { [weak self] in
             let item = AVPlayerItem(url: url)
             let player = AVPlayer(playerItem: item)
             player.isMuted = true
-            await MainActor.run {
-                self.addNotificationsObserver(to: item)
-                self.playerLayer.player = player
+            await MainActor.run { [weak self] in
+                self?.addNotificationsObserver(to: item)
+                self?.playerLayer.player = player
             }
             
-            let shouldBePlaying = await self.shouldBePlaying
+            let shouldBePlaying = await self?.shouldBePlaying
             
             if Task.isCancelled { return }
-            if (startPlayback || shouldBePlaying) {
-                await self.play()
+            if (startPlayback || shouldBePlaying == true) {
+                await self?.play()
             }
             
             if Task.isCancelled { return }
@@ -106,7 +106,8 @@ class VideoPlayerView: UIView {
     
     @objc func playerItemDidPlayToEndTime(_ notification: Notification) {
         Task(priority: .userInitiated) {
-            await MainActor.run {
+            await MainActor.run { [weak self] in
+                guard let self else { return }
                 if self.shouldBePlaying {
                     self.player?.seek(to: .zero)
                     self.play()

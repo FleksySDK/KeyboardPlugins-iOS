@@ -11,9 +11,10 @@ In more technical terms, in order to create your own FleksyApp using the BaseFle
 * Optionally create your category type implementing the ``BaseCategory`` protocol.
 * Create your own subclass of ``BaseApp``.
 
-Currently, the `BaseApp` only supports showing the following content types (see ``BaseMedia/ContentType-swift.enum``):
+Currently, the `BaseApp` only supports showing the following content types (see ``BaseContentType``):
 * Images.
 * Videos.
+* HTML.
 
 Below we will illustrate this guide with the example of the `GiphyApp`, which is a FleksyApp built using the BaseFleksyApp. 
 
@@ -21,18 +22,18 @@ Below we will illustrate this guide with the example of the `GiphyApp`, which is
 
 The first thing you need is a type that represents each media content item to be presented in the FleksyApp. For that, your media content type needs to implement the ``BaseContent`` protocol. 
 
-Basically, each media item needs to have a unique identifier and needs to be mappable to a ``BaseMedia`` object. The ``BaseMedia`` struct contains all the information required for the ``BaseApp`` class to download and show the content of the media item. Note that the ``BaseMedia/contentType-swift.property`` is the value that determines the type of content presented to the user in the media carousel.
+Basically, each media item needs to have a unique identifier and declare a ``BaseContentType`` via the ``BaseContent/contentType`` property. For presenting an image or video, use the ``BaseContentType/remoteMedia(_:)`` case, where the ``RemoteMedia`` associated object contains all the information required for the ``BaseApp`` class to download and show the content of the media item. Note that the ``RemoteMedia/mediaType-swift.property`` is the value that determines the type of media content presented to the user in the media carousel.
 
 For example, the Giphy app uses the `GifContent`:
 
 ```swift
 public struct GifContent: BaseContent {
     var gifURL: URL
-    var thumbnailVideo: BaseMedia
+    var thumbnailVideo: RemoteMedia
     
     // BaseContent protocol conformance:
 
-    public var viewMedia: BaseFleksyApp.BaseMedia { thumbnailVideo }
+    public var contentType: BaseContentType { .remoteMedia(thumbnailVideo) }
     public var id: String
 }
 ```
@@ -69,7 +70,7 @@ This is how the categories are shown in a horizontally scrollable list:
 
 ### Create your BaseApp subclass
 
-Once you declared your media content and category types, you are ready to create the main class of your own FleksyApp. This class needs to be a subclass of ``BaseApp`` and should use the types defined before for the two generic types required by ``BaseApp``.
+Once you declare your media content and category types, you are ready to create the main class of your own FleksyApp. This class needs to be a subclass of ``BaseApp`` and should use the types defined before for the two generic types required by ``BaseApp``.
 
 ```swift
 public class GiphyApp: BaseApp<GifContent, GifsCategory> {
@@ -110,6 +111,6 @@ The ``BaseApp`` also provides a set of methods to show/hide a toast with a custo
 - Use ``BaseApp/showToast(message:alignment:showLoader:animationDuration:delay:)`` or ``BaseApp/showToastAndWait(message:alignment:showLoader:animationDuration:delay:)`` to present the message.
 - Use ``BaseApp/hideToast(animationDuration:delay:)`` or ``BaseApp/hideToastAndWait(animationDuration:delay:)`` to hide the message.
 
-The Giphy uses these methods app presents a temporary toast message when the user selects a gif to let them know that the gif is copied and ready for them to paste. 
+The Giphy uses these methods to present a temporary toast message when the user selects a gif to let them know that the gif is copied and ready for them to paste. 
 
 ![An image of the Giphy app showing a toast message after the user has selected a gif.](GiphyAppToast.png)

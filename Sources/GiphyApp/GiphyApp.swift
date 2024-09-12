@@ -102,29 +102,28 @@ final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
     public override func didSelectContent(_ content: GifContent) {
         currentContentSelectionTask?.cancel()
         currentContentSelectionTask = Task.detached(priority: .userInitiated) { [weak self] in
-            guard let self else { return }
             // With the delay we avoid changing the toast message to the user too quickly.
             // If the gif download takes longer than 0.3 seconds, then the "downloading" message
             // is shown to provide quick feedback.
-            await self.showToast(message: GiphyConstants.LocalizedStrings.toastDownloading, showLoader: true, delay: GiphyApp.downloadingToastDelay)
-            let result = await self.service.getGifData(from: content)
+            await self?.showToast(message: GiphyConstants.LocalizedStrings.toastDownloading, showLoader: true, delay: GiphyApp.downloadingToastDelay)
+            guard let result = await self?.service.getGifData(from: content) else { return }
             guard !Task.isCancelled else { return }
             
             switch result {
             case .success(let gifData):
-                await self.copyGifDataToClipboard(gifData)
-                await self.showToastAndWait(message: GiphyConstants.LocalizedStrings.toastCopiedAndReady)
+                await self?.copyGifDataToClipboard(gifData)
+                await self?.showToastAndWait(message: GiphyConstants.LocalizedStrings.toastCopiedAndReady)
                 try? await Task.sleep(nanoseconds: GiphyApp.defaultToastDuration * NSEC_PER_SEC)
                 guard !Task.isCancelled else { return }
-                await self.hideToastAndWait()
+                await self?.hideToastAndWait()
                 guard !Task.isCancelled else { return }
-                await self.appListener?.hide()
+                await self?.appListener?.hide()
             case .failure(let error):
                 let message = GiphyConstants.LocalizedStrings.gifDownloadError + "\n" + error.defaultErrorMessage
-                await self.showToastAndWait(message: message)
+                await self?.showToastAndWait(message: message)
                 try? await Task.sleep(nanoseconds: GiphyApp.defaultToastDuration * NSEC_PER_SEC)
                 guard !Task.isCancelled else { return }
-                await self.hideToastAndWait()
+                await self?.hideToastAndWait()
             }
         }
     }

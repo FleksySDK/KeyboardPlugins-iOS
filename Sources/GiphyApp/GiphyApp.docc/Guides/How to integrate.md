@@ -6,7 +6,7 @@ Learn how to easily integrate the GiphyApp into your custom keyboard extension p
 
 To integrate the GiphyApp in your FleksySDK-powered keyboard extension you will only need:
 * A Giphy API key.
-* Create a ``GiphyApp`` instance.  
+* Creating an instance of ``GiphyApp``.  
 
 
 ### Obtain a Giphy API key
@@ -15,7 +15,7 @@ You can learn how to request a Giphy API Key [here](https://support.giphy.com/hc
 
 ### The GiphyApp class
 
-All you need to enable the GiphyApp in your keyboard extension is pass the KeyboardSDK a ``GiphyApp`` instance in the `createConfiguration()` of your own `FKKeyboardViewController` subclass. To do this, initialize the  `AppsConfiguration` object including the ``GiphyApp`` instance in the `keyboardApps` array parameter and then pass this `AppsConfiguration` object in the returned `KeyboardConfiguration` for the `apps` parameter. 
+All you need to enable the GiphyApp in your keyboard extension is to pass the KeyboardSDK a ``GiphyApp`` instance in the `createConfiguration()` of your own `FKKeyboardViewController` subclass. To do this, initialize the  `AppsConfiguration` object including the ``GiphyApp`` instance in the `keyboardApps` array parameter and then pass this `AppsConfiguration` object in the returned `KeyboardConfiguration` for the `apps` parameter. 
 
 ```swift
 
@@ -37,7 +37,7 @@ override func createConfiguration() -> KeyboardConfiguration {
 }
 ```
 
-After this, the user will be able to access the Giphy app from the FleksyApps carousel that is accessed by pressing the action button on the left of the top bar of the keyboard.
+After this, the user will be able to open the Giphy app from the FleksyApps carousel that is accessed by pressing the action button on the left of the top bar of the keyboard.
 
 ### How to open the GiphyApp programmatically
 

@@ -334,10 +334,10 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     
     @discardableResult
     private func performInitialLoads() -> Task<(), Never> {
-        Task(priority: .userInitiated) {
-            await appView?.showLoader()
-            await performGetCategories().value
-            performDefaultRequest()
+        Task(priority: .userInitiated) { [weak self] in
+            await self?.appView?.showLoader()
+            await self?.performGetCategories().value
+            self?.performDefaultRequest()
         }
     }
     
@@ -401,9 +401,9 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         
         let task = Task(priority: .userInitiated) { () -> BaseContentResult in
             if pagination.isFirstPage {
-                await MainActor.run {
-                    appView?.showLoader()
-                    currentContents = []
+                await MainActor.run { [weak self] in
+                    self?.appView?.showLoader()
+                    self?.currentContents = []
                 }
             }
             
@@ -413,16 +413,17 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
                 return .failure(.cancelled)
             }
             
-            return await MainActor.run { () -> BaseContentResult in
+            return await MainActor.run { [weak self] () -> BaseContentResult in
+                guard let self else { return result }
                 switch result {
                 case .success(let contents):
-                    appendContentsRemovingDuplicates(contents)
-                    appView?.hideErrorMessage()
-                    appView?.hideLoader()
+                    self.appendContentsRemovingDuplicates(contents)
+                    self.appView?.hideErrorMessage()
+                    self.appView?.hideLoader()
                 case .failure(let error):
-                    let errorMsg = getErrorMessageForError(error)
-                    appView?.showErrorMessage(errorMsg)
-                    appView?.hideLoader()
+                    let errorMsg = self.getErrorMessageForError(error)
+                    self.appView?.showErrorMessage(errorMsg)
+                    self.appView?.hideLoader()
                 }
                 self.activeContentsTask = nil
                 return result
@@ -440,11 +441,11 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         if let activeCategoriesTask {
             return activeCategoriesTask
         }
-        let categoriesTask = Task {
-            let categories = await self.getCategories()
-            await MainActor.run {
-                currentCategories = categories
-                appView?.reloadCategories(categories)
+        let categoriesTask = Task { [weak self] in
+            guard let categories = await self?.getCategories() else { return }
+            await MainActor.run { [weak self] in
+                self?.currentCategories = categories
+                self?.appView?.reloadCategories(categories)
             }
         }
         activeCategoriesTask = categoriesTask
@@ -525,7 +526,10 @@ extension BaseApp: BaseAppViewDelegate {
             return nil
         }
         let content = currentContents[index]
-        return mediaManager.localFileURL(for: content)
+        guard case .remoteMedia(let remoteMedia) = content.contentType else {
+            return nil
+        }
+        return mediaManager.localFileURL(id: content.id, for: remoteMedia)
     }
     
     func loadContentAt(index: Int) async {
@@ -534,7 +538,10 @@ extension BaseApp: BaseAppViewDelegate {
             return
         }
         let content = currentContents[index]
-        _ = await mediaManager.downloadMediaIfNeeded(from: content)
+        guard case .remoteMedia(let remoteMedia) = content.contentType else {
+            return
+        }
+        _ = await mediaManager.downloadMediaIfNeeded(id: content.id, for: remoteMedia)
     }
     
     func prefetchItemsAt(indexes: [Int]) {
@@ -554,11 +561,12 @@ extension BaseApp: BaseAppViewDelegate {
         
         if !contentsToFetch.isEmpty {
             Task.detached(priority: .userInitiated) {
-                await withTaskGroup(of: Void.self) { [weak self] group in
-                    guard let self else { return }
+                await withTaskGroup(of: Void.self) { group in
                     for content in contentsToFetch {
-                        group.addTask(priority: .userInitiated) {
-                            _ = await self.mediaManager.downloadMediaIfNeeded(from: content)
+                        if case .remoteMedia(let remoteMedia) = content.contentType {
+                            group.addTask(priority: .userInitiated) { [weak self] in
+                                _ = await self?.mediaManager.downloadMediaIfNeeded(id: content.id, for: remoteMedia)
+                            }
                         }
                     }
                 }
@@ -590,8 +598,8 @@ extension BaseApp: BaseAppViewDelegate {
                     .filter { $0 < currentContents.count }
                     .forEach {
                         let result = currentContents[$0]
-                        group.addTask {
-                            await self.mediaManager.cancelMediaDownload(for: result)
+                        group.addTask { [weak self] in
+                            await self?.mediaManager.cancelMediaDownload(id: result.id)
                         }
                     }
             }
@@ -609,8 +617,12 @@ extension BaseApp: BaseAppViewDelegate {
         guard index < currentContents.count else {
             return .zero
         }
-        let result = currentContents[index]
-        return CGSize(width: result.viewMedia.width, height: result.viewMedia.height)
+        switch currentContents[index].contentType {
+        case .remoteMedia(let remoteMedia):
+            return CGSize(width: remoteMedia.width, height: remoteMedia.height)
+        case .html(_, let width, let height):
+            return CGSize(width: width, height: height)
+        }
     }
     
     // MARK: - CategoryViewDelegate

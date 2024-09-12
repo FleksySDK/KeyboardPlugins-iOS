@@ -179,8 +179,8 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         let currentlyHidden = self.toastController.view.isHidden
         toastContainer.update(message: message, alignment: alignment, showingLoader: showLoader,  animated: !currentlyHidden)
         self.toastController.view.isHidden = false
-        UIView.animate(withDuration: animationDuration, delay: delay) {
-            self.toastController.view.alpha = 1
+        UIView.animate(withDuration: animationDuration, delay: delay) { [weak self] in
+            self?.toastController.view.alpha = 1
         }
     }
     
@@ -188,25 +188,25 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         let currentlyHidden = self.toastController.view.isHidden
         toastContainer.update(message: message, alignment: alignment, showingLoader: showLoader, animated: !currentlyHidden)
         self.toastController.view.isHidden = false
-        await UIView.animateKeyframes(withDuration: animationDuration, delay: delay, options: .beginFromCurrentState) {
-            self.toastController.view.alpha = 1
+        await UIView.animateKeyframes(withDuration: animationDuration, delay: delay, options: .beginFromCurrentState) { [weak self] in
+            self?.toastController.view.alpha = 1
         }
     }
     
     @MainActor
     func hideToast(animationDuration: TimeInterval, delay: TimeInterval) {
-        UIView.animate(withDuration: animationDuration, delay: delay) {
-            self.toastController.view.alpha = 0
-        } completion: { finished in
+        UIView.animate(withDuration: animationDuration, delay: delay) { [weak self] in
+            self?.toastController.view.alpha = 0
+        } completion: { [weak self] finished in
             if finished {
-                self.toastController.view.isHidden = true
+                self?.toastController.view.isHidden = true
             }
         }
     }
     
     func hideToastAndWait(animationDuration: TimeInterval, delay: TimeInterval) async {
-        let finished = await UIView.animateKeyframes(withDuration: animationDuration, delay: delay, options: .beginFromCurrentState) {
-            self.toastController.view.alpha = 0
+        let finished = await UIView.animateKeyframes(withDuration: animationDuration, delay: delay, options: .beginFromCurrentState) { [weak self] in
+            self?.toastController.view.alpha = 0
         }
         if finished {
             toastController.view.isHidden = true

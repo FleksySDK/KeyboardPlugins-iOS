@@ -21,8 +21,18 @@ public protocol BaseContent: Hashable {
     /// Thus, it must be unique and constant for the same model.
     var id: String { get }
     
-    /// The object linking to the media content to be shown in a cell of the list in the FleksyApp.
-    var viewMedia: BaseMedia { get }
+    /// The content to be shown in a cell of the list in the FleksyApp.
+    var contentType: BaseContentType { get }
+}
+
+/// An enum containing the supported types of contents for the list in the FleksyApp.
+public enum BaseContentType {
+    
+    /// Remote media content.
+    case remoteMedia(RemoteMedia)
+    
+    /// An HTML content.
+    case html(String, width: Int, height: Int)
 }
 
 extension BaseContent {
