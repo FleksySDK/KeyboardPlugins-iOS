@@ -12,10 +12,8 @@ To integrate the MediaShareApp in your FleksySDK-powered keyboard extension you 
 ### Obtain the credentials for the MediaShareApp
 
 The credentials you will need to implement the MediaShareApp are:
-* A MediaShare app api key.
-* The FleksySDK license key.
-
-You can obtain them both from the [Fleksy Developers platform](https://developers.fleksy.com/).
+* A MediaShare app API key. You can obtain it by writing an email to customer.support@fleksy.com indicating that you want an API key for the MediaShare app.
+* The FleksySDK license key. You can obtain it from the [Fleksy Developers platform](https://developers.fleksy.com/).
 
 ### Chosing the media type
 
@@ -29,7 +27,7 @@ Currently, the MediaShareApp supports 3 types of contents (``MediaShareApp/Conte
 All you need to enable the MediaShareApp in your keyboard extension is to pass the KeyboardSDK a ``MediaShareApp`` instance in the `createConfiguration()` of your own `FKKeyboardViewController` subclass. To do this, initialize the  `AppsConfiguration` object including the ``MediaShareApp`` instance in the `keyboardApps` array parameter and then pass this `AppsConfiguration` object in the returned `KeyboardConfiguration` for the `apps` parameter.
 
 To initialize the ``MediaShareApp`` instance, you will need:
-* A MediaShare app api key. You can obtain it from [Fleksy Developers platform](https://developers.fleksy.com/).
+* The MediaShare app API key.
 * The FleksySDK license key.
 * The type of media for the ``MediaShareApp``: gifs, clips or stickers.
 

@@ -14,6 +14,7 @@ import UniformTypeIdentifiers
 /// The main class of Giphy FleksyApp.
 ///
 /// Use this class as the entry point to add the Giphy App to your keyboard extension.
+@available(*, deprecated, message: "The GiphyApp has been deprecated and will be removed in the future. It has been replaced by the MediaShareApp from the same Swift Package, which, besides Gifs, also supports Clip videos and Stickers")
 final public class GiphyApp: BaseApp<GifContent, GifsCategory> {
     
     // Animations constants

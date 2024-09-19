@@ -2,6 +2,8 @@
 
 Add a Giphy-powered gif browser to your keyboard extension.
 
+> Warning: The GiphyApp has been deprecated and will be removed in the future. It has been replaced by the MediaShareApp from the same Swift Package, which, besides Gifs, also supports Clip videos and Stickers.
+
 ## Overview
 
 Your keyboard extension built using [Fleksy Keyboard SDK](https://docs.fleksy.com/keyboard-sdk/) can enjoy extra functionalities with the FleksyApps. These are add-ons you can easily enable in your keyboard extension to enhance the user experience of your keyboard.
