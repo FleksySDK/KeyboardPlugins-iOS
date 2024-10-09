@@ -6,6 +6,7 @@
 
 
 import UIKit
+import AdSupport
 
 struct MediaShareRequestDTO: Encodable {
     
@@ -41,16 +42,27 @@ struct MediaShareRequestDTO: Encodable {
         case adMaxWidth
         case adMinHeight
         case adMaxHeight
+        case deviceOperatingSystemVersion
+        case deviceHardwareVersion
+        case deviceMake
+        case deviceModel
+        case deviceIfa
     }
     
     let content: ContentType
     let feature: Feature
     let userId: String = (UIDevice.current.identifierForVendor ?? UUID()).uuidString
-    let platform: String = "ios"
+    let platform: String = UIDevice.current.systemName
     let adMinWidth: Int = 100
     let adMaxWidth: Int = 320
     let adMinHeight: Int = 100
     let adMaxHeight: Int = 250
+    let deviceOperatingSystemVersion: String = UIDevice.current.systemVersion
+    let deviceHardwareVersion: String = UIDevice.modelIdentifier
+    let deviceMake: String = "apple"
+    let deviceModel: String = UIDevice.current.model
+    let deviceIdfa: String? = UIDevice.idfa
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(content, forKey: .content)
@@ -74,5 +86,40 @@ struct MediaShareRequestDTO: Encodable {
             try container.encode(query, forKey: .query)
             try container.encode(page, forKey: .page)
         }
+        
+        try container.encode(deviceOperatingSystemVersion, forKey: .deviceOperatingSystemVersion)
+        try container.encode(deviceHardwareVersion, forKey: .deviceHardwareVersion)
+        try container.encode(deviceMake, forKey: .deviceMake)
+        try container.encode(deviceModel, forKey: .deviceModel)
+        try container.encode(deviceIdfa, forKey: .deviceIfa)
+    }
+}
+
+private extension UIDevice {
+    
+    static let modelIdentifier: String = {
+        let identifier: String
+#if targetEnvironment(simulator)
+        identifier = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"]!
+#else
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machineMirror = Mirror(reflecting: systemInfo.machine)
+        identifier = machineMirror.children.reduce("") { identifier, element in
+            guard let value = element.value as? Int8, value != 0 else { return identifier }
+            return identifier + String(UnicodeScalar(UInt8(value)))
+        }
+#endif
+        return identifier
+    }()
+    
+    private static let invalidIDFA = "00000000-0000-0000-0000-000000000000"
+    
+    static var idfa: String? {
+        let idfaCandidate = ASIdentifierManager.shared().advertisingIdentifier.uuidString
+        guard idfaCandidate != invalidIDFA else {
+            return nil
+        }
+        return idfaCandidate
     }
 }

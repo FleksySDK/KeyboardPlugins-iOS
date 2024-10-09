@@ -46,6 +46,11 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     private let contentType: ContentType
     private let service: MediaShareService
     
+    public override func initialize(listener: AppListener, configuration: AppConfiguration) {
+        super.initialize(listener: listener, configuration: configuration)
+        service.scheduleHealthCheckIfNeeded()
+    }
+    
     /// The icon for the MediaShare app.
     ///
     /// You need not call this method at any point. This method is public only for conformance to the `KeyboardApp` protocol declared in the package `FleksyAppsCore`.
