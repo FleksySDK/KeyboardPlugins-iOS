@@ -35,7 +35,8 @@ class MediaShareService {
     private let MediaShareApiKey: String
     private let sdkLicenseId: String
     
-    @MainActor private var healthCheckTask: Task<HealthCheckResponse, Error>?
+    private static let healthCheckMinWaitTime: TimeInterval = 600 // 10 minutes
+    @MainActor private static var healthCheckTask: Task<(HealthCheckResponse, Date), Error>?
         
     // MARK: - Init
     
@@ -46,6 +47,14 @@ class MediaShareService {
     }
     
     // MARK: - Interface methods
+    
+    func scheduleHealthCheckIfNeeded() {
+        Task {
+            let initialDelay: UInt64 = 10_000_000_000
+            try await Task.sleep(nanoseconds: initialDelay)
+            await performHealthCheckRequestIfNeeded()
+        }
+    }
     
     func getContent(_ content: Content, timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<MediaShareResponse, BaseError> {
         await performHealthCheckRequestIfNeeded(timeout: timeout)
@@ -77,16 +86,23 @@ class MediaShareService {
     // MARK: - Private methods
 
     @MainActor private func performHealthCheckRequestIfNeeded(timeout: TimeInterval = MediaShareService.defaultTimeout) async  {
-        if let healthCheckTask {
-            _ = await healthCheckTask.result
-        } else {
-            healthCheckTask = Task {
-                let request = createContentRequest(for: .healthCheck, timeout: timeout)
-                let result: Result<HealthCheckResponse, BaseError> = await makeMediaShareAPIRequest(request)
-                return try result.get()
-            }
-            _ = await healthCheckTask?.result
+        if let healthCheckTask = Self.healthCheckTask,
+           let result = try? await healthCheckTask.result.get(),
+           result.1.distance(to: Date()) < Self.healthCheckMinWaitTime
+        {
+            // Too soon to make a new health check request
+            return
         }
+        await performHealthCheckRequest(timeout: timeout)
+    }
+    
+    @MainActor private func performHealthCheckRequest(timeout: TimeInterval) async {
+        Self.healthCheckTask = Task {
+            let request = createContentRequest(for: .healthCheck, timeout: timeout)
+            let result: Result<HealthCheckResponse, BaseError> = await makeMediaShareAPIRequest(request)
+            return (try result.get(), Date())
+        }
+        _ = await Self.healthCheckTask?.result
     }
     
     private func createContentRequest(for feature: MediaShareRequestDTO.Feature, timeout: TimeInterval) -> URLRequest {
