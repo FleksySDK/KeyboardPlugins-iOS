@@ -114,6 +114,12 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
         return categories ?? []
     }
     
+    public override func getListViewConfiguration(forViewMode viewMode: KeyboardAppViewMode) -> ListViewConfiguration {
+        var configuration = super.getListViewConfiguration(forViewMode: viewMode)
+        configuration.bands = 1
+        return configuration
+    }
+    
     private var currentContentSelectionTask: Task<Void, Never>?
     
     /// Performs the action after the user selects a given content in the app.
