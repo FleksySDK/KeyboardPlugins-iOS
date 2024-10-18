@@ -10,6 +10,8 @@ import FleksyAppsCore
 
 protocol ListViewDelegate: AnyObject {
     
+    var allowAudioInVideoCells: Bool { get }
+    
     /// Always return the local URL of the file, even if it hasn't been downloaded yet.
     @MainActor
     func localURLForContentAt(index: Int) -> URL?
@@ -33,6 +35,10 @@ protocol ListViewDelegate: AnyObject {
     
     @MainActor
     func absoluteSizeForItemAt(index: Int) -> CGSize
+    
+    func willUnmuteAudioInVideoCell()
+    
+    func willStartVideoPlaybackInVideoCell()
 }
 
 struct ListViewConfiguration: Equatable {
@@ -216,7 +222,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
         switch cell {
         case let videoCell as VideoCell:
             if let url = delegate.localURLForContentAt(index: index),
-               !videoCell.loadMedia(localURL: url, autoplay: true) {
+               !videoCell.loadMedia(localURL: url, autoplay: true, audioToggle: delegate.allowAudioInVideoCells, delegate: self) {
                 Task.detached {
                     await delegate.loadContentAt(index: index)
                     await videoCell.forceLoadMedia(localURL: url, autoplay: true)
@@ -258,5 +264,21 @@ extension ListView: MosaicLayoutDelegate {
     
     func collectionView(_ collectionView: UICollectionView, absoluteSizeForItemAtIndexPath indexPath: IndexPath) -> CGSize {
         delegate?.absoluteSizeForItemAt(index: indexPath.item) ?? CGSize(width: 1, height: 1)
+    }
+}
+
+extension ListView: VideoCellDelegate {
+    
+    func videoCellWillStartPlayingVideo(_ videoCell: VideoCell) {
+        delegate?.willStartVideoPlaybackInVideoCell()
+    }
+    
+    func videoCellWillUnmuteAudio(_ videoCell: VideoCell) {
+        delegate?.willUnmuteAudioInVideoCell()
+        collectionView.visibleCells.forEach {
+            if let otherVideoCell = $0 as? VideoCell, otherVideoCell !== videoCell {
+                otherVideoCell.muteAudio()
+            }
+        }
     }
 }

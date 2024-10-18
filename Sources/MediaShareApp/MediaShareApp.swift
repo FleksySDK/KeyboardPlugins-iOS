@@ -46,6 +46,14 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     private let contentType: ContentType
     private let service: MediaShareService
     
+    public override var allowAudioInVideoPreviews: Bool {
+        switch contentType {
+        case .clips: true
+        case .gifs: false
+        case .stickers: false
+        }
+    }
+    
     public override func initialize(listener: AppListener, configuration: AppConfiguration) {
         super.initialize(listener: listener, configuration: configuration)
         service.scheduleHealthCheckIfNeeded()

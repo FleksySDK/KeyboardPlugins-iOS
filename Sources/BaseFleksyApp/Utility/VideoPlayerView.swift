@@ -16,6 +16,10 @@ class VideoPlayerView: UIView {
     
     @MainActor
     private var shouldBePlaying: Bool = false
+    
+    @MainActor
+    private var shouldBeMuted: Bool = true
+    
     var isPlaying: Bool {
         return (playerLayer.player?.rate ?? 0) > 0
     }
@@ -65,7 +69,7 @@ class VideoPlayerView: UIView {
         videoLoadTask = Task.detached(priority: .background) { [weak self] in
             let item = AVPlayerItem(url: url)
             let player = AVPlayer(playerItem: item)
-            player.isMuted = true
+            player.isMuted = await self?.shouldBeMuted ?? true
             await MainActor.run { [weak self] in
                 self?.addNotificationsObserver(to: item)
                 self?.playerLayer.player = player
@@ -94,6 +98,11 @@ class VideoPlayerView: UIView {
         shouldBePlaying = false
         player?.pause()
     }
+    
+    @MainActor func setAudio(muted: Bool) {
+        shouldBeMuted = muted
+        player?.isMuted = muted
+    }
      
     @MainActor
     func resetVideoPlayer() {
@@ -102,6 +111,7 @@ class VideoPlayerView: UIView {
         removeNotificationsObserver()
         playerLayer.player = nil
         shouldBePlaying = false
+        shouldBeMuted = true
     }
     
     @objc func playerItemDidPlayToEndTime(_ notification: Notification) {

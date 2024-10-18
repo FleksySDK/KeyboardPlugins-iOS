@@ -8,6 +8,7 @@
 import UIKit
 import FleksyAppsCore
 import SwiftUI
+import AVKit
 
 /// An object that handles the processes of a FleksyApp.
 ///
@@ -44,6 +45,11 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         }
     }
     
+    /// The Keyboard app may need to modify the audio session category for video playback.
+    ///
+    /// This closure is used to restore the audio session to its original state when the keyboard app closes.
+    fileprivate var restoreAudioSessionCallback: (() -> Void)?
+    
     private lazy var mediaManager = MediaManager(appId: appId, configuration: configuration)
     
     /// The function to load subsequent pages of the current
@@ -55,6 +61,9 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     open var defaultCategory: Category? {
         currentCategories.first
     }
+    
+    /// Whether the keyboard app should include the toggle for the user to enable audio in video previews. Detaults to `true`.
+    open var allowAudioInVideoPreviews: Bool { true }
     
     /// The current `AppListener`.
     ///
@@ -146,6 +155,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         activeCategoriesTask = nil
         currentContents = []
         currentCategories = []
+        restoreAudioSessionCallback?()
     }
     
     /// Invoked when the configuration changed.
@@ -510,6 +520,8 @@ extension BaseApp: AppTextFieldDelegate {
 
 extension BaseApp: BaseAppViewDelegate {
     
+    var allowAudioInVideoCells: Bool { allowAudioInVideoPreviews }
+    
     /// Method called when the user taps the search button in the app during `KeyboardAppViewMode.fullCover` mode. The base app changes the view mode to `KeyboardAppViewMode.frame` with `TopBarMode.appTextField` top bar mode.
     ///
     /// - Important: Do not call this method form the ``BaseApp`` subclass.
@@ -622,6 +634,43 @@ extension BaseApp: BaseAppViewDelegate {
             return CGSize(width: remoteMedia.width, height: remoteMedia.height)
         case .html(_, let width, let height):
             return CGSize(width: width, height: height)
+        }
+    }
+    
+    func willStartVideoPlaybackInVideoCell() {
+        saveCurrentAVAudioSessionCategoryStatusIfNeeded()
+        if AVAudioSession.sharedInstance().category == .soloAmbient {
+            /// If the category is `.soloAmbient` (which is the default category), playing a video (even muted)
+            /// stops any other audio that can be playing on the device by any other app (e.g. music, podcast, etc.)
+            /// We change the category to `.ambient` in order to prevent a muted video playback on the
+            /// Keyboard app from stopping the current audio playback on the device.
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.ambient)
+            } catch {
+                print("Error when setting the AVAudioSession category for playing video: \(error)")
+            }
+        }
+    }
+
+    func willUnmuteAudioInVideoCell() {
+        saveCurrentAVAudioSessionCategoryStatusIfNeeded()
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: .duckOthers)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Error when setting the AVAudioSession category for enabling video sound: \(error)")
+        }
+    }
+    
+    private func saveCurrentAVAudioSessionCategoryStatusIfNeeded() {
+        if restoreAudioSessionCallback == nil {
+            let originalCategory = AVAudioSession.sharedInstance().category
+            let originalMode = AVAudioSession.sharedInstance().mode
+            let originalPolicy = AVAudioSession.sharedInstance().routeSharingPolicy
+            let originalOptions = AVAudioSession.sharedInstance().categoryOptions
+            restoreAudioSessionCallback = {
+                try? AVAudioSession.sharedInstance().setCategory(originalCategory, mode: originalMode, policy: originalPolicy, options: originalOptions)
+            }
         }
     }
     
