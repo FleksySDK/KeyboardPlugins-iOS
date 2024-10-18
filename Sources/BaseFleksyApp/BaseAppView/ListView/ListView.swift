@@ -41,35 +41,37 @@ protocol ListViewDelegate: AnyObject {
     func willStartVideoPlaybackInVideoCell()
 }
 
-struct ListViewConfiguration: Equatable {
+/// Contains the information to configure the Base keyboard app's list (number of bands, scroll direction and spacings).
+public struct ListViewConfiguration: Equatable {
     
     /// The number of rows/columns of the collection view.
-    let bands: Int
+    public var bands: Int
     
     /// The scroll direction of the collection view.
-    let direction: UICollectionView.ScrollDirection
+    public var direction: UICollectionView.ScrollDirection
 
     /// The padding for the collection view cells.
-    let cellPadding: CGFloat
+    public var cellPadding: CGFloat
     
     /// The collection view's insets from the app's view.
-    let listInsets: UIEdgeInsets
+    public var listInsets: UIEdgeInsets
     
-    init(keyboardAppViewMode: KeyboardAppViewMode) {
-        switch keyboardAppViewMode {
-        case .fullCover:
-            self.bands = 2
-        case .frame:
-            self.bands = 1
-        @unknown default:
-            self.bands = 1
+    /// The default ``ListViewConfiguration`` for a given ``KeyboardAppViewMode``.
+    /// - Parameter keyboardAppViewMode: The ``KeyboardAppViewMode`` for which to obtain the default ``ListViewConfiguration``.
+    /// - Returns: The default ``ListViewConfiguration`` for a given ``KeyboardAppViewMode``. 2 rows for ``KeyboardAppViewMode/fullCover``, 1 row for ``KeyboardAppViewMode/frame``.
+    public static func `default`(keyboardAppViewMode: KeyboardAppViewMode) -> Self {
+        let bands: Int = switch keyboardAppViewMode {
+        case .fullCover: 2
+        case .frame: 1
+        @unknown default: 1
         }
-        self.direction = .horizontal
-        self.cellPadding = 1
-        self.listInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        return Self(bands: bands,
+                    direction: .horizontal,
+                    cellPadding: 1,
+                    listInsets: UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10))
     }
     
-    init(bands: Int, direction: UICollectionView.ScrollDirection, cellPadding: CGFloat, listInsets: UIEdgeInsets) {
+    public init(bands: Int, direction: UICollectionView.ScrollDirection, cellPadding: CGFloat, listInsets: UIEdgeInsets) {
         self.bands = max(bands, 1)
         self.direction = direction
         self.cellPadding = max(cellPadding, 0)

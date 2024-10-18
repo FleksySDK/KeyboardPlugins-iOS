@@ -78,19 +78,18 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         return stackView
     }()
     
-    init(viewMode: KeyboardAppViewMode, appTheme: AppTheme, delegate: BaseAppViewDelegate, searchText: String) {
+    init(viewMode: KeyboardAppViewMode, appTheme: AppTheme, delegate: BaseAppViewDelegate, listViewConfiguration: ListViewConfiguration, searchText: String) {
         self.appTheme = appTheme
         self.delegate = delegate
         
-        let listConfiguration = ListViewConfiguration(keyboardAppViewMode: viewMode)
-        self.listView = ListView(configuration: listConfiguration, appTheme: appTheme, delegate: delegate)
+        self.listView = ListView(configuration: listViewConfiguration, appTheme: appTheme, delegate: delegate)
         
         self.categoryView = CategoryView(appTheme: appTheme, delegate: delegate)
         
         super.init(frame: .zero)
         
         setup(searchText: searchText)
-        updateForViewMode(viewMode)
+        updateForViewMode(viewMode, listViewConfiguration: listViewConfiguration)
     }
     
     required init?(coder: NSCoder) {
@@ -99,7 +98,7 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
     
     // MARK: - Interface
     
-    func updateForViewMode(_ viewMode: KeyboardAppViewMode) {
+    func updateForViewMode(_ viewMode: KeyboardAppViewMode, listViewConfiguration: ListViewConfiguration) {
         switch viewMode {
         case .fullCover:
             actionsViewContainer.isHidden = false
@@ -109,7 +108,7 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
             actionsViewContainer.isHidden = true
         }
         
-        listView.configuration = ListViewConfiguration(keyboardAppViewMode: viewMode)
+        listView.configuration = listViewConfiguration
     }
     
     @MainActor

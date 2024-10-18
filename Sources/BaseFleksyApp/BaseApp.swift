@@ -122,12 +122,13 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     @MainActor
     open func open(viewMode: KeyboardAppViewMode, theme: AppTheme) -> UIView? {
         let view: BaseAppView<ContentType, Category>
+        let listViewConfiguration = getListViewConfiguration(forViewMode: viewMode)
         if let appView {
             appView.appTheme = theme
-            appView.updateForViewMode(viewMode)
+            appView.updateForViewMode(viewMode, listViewConfiguration: listViewConfiguration)
             view = appView
         } else {
-            view = BaseAppView(viewMode: viewMode, appTheme: theme, delegate: self, searchText: configuration.searchButtonText)
+            view = BaseAppView(viewMode: viewMode, appTheme: theme, delegate: self, listViewConfiguration: listViewConfiguration, searchText: configuration.searchButtonText)
             appView = view
         }
 
@@ -270,6 +271,16 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     @MainActor
     open func getErrorMessageForError(_ error: BaseError) -> String {
         error.defaultErrorMessage
+    }
+    
+    @MainActor
+    /// Optionally override this method to return a custom ``ListViewConfiguration`` for the keyboard app.
+    /// - Parameter viewMode: The ``KeyboardAppViewMode`` that will be used in the keyboard app. You can setup your custom ``ListViewConfiguration`` depending on the view mode.
+    /// - Returns: The desired ``ListViewConfiguration``.
+    ///
+    /// The default implementation returns ``ListViewConfiguration/default(keyboardAppViewMode:)``.
+    open func getListViewConfiguration(forViewMode viewMode: KeyboardAppViewMode) -> ListViewConfiguration {
+        .default(keyboardAppViewMode: viewMode)
     }
     
     // MARK: Other public methods
