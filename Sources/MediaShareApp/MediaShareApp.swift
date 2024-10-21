@@ -125,6 +125,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     /// Performs the action after the user selects a given content in the app.
     /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func didSelectContent(_ content: MediaShareContent) {
+        service.sendImpresion(.share, for: content)
         currentContentSelectionTask?.cancel()
         currentContentSelectionTask = Task.detached(priority: .userInitiated) { [weak self] in
             guard let self else { return }
@@ -153,6 +154,10 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
                 await self.hideToastAndWait()
             }
         }
+    }
+    
+    public override func willShowContent(_ content: MediaShareContent) {
+        service.sendImpresion(.view, for: content)
     }
     
     // MARK: - Private methods

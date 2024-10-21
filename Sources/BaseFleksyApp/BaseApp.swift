@@ -247,9 +247,17 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// Override this method to perform any desired action when the user taps a content cell.
     /// - Parameter content: The content object tapped by the user.
     ///
-    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation
+    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation.
     @MainActor
     open func didSelectContent(_ content: ContentType) {}
+    
+    
+    /// Override this method to perform any desired action when the content cell is about to be displayed to the user.
+    /// - Parameter content: The content object that is about to be displayed to the user.
+    ///
+    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation.
+    @MainActor
+    open func willShowContent(_ content: ContentType) {}
     
     /// This method is called by the KeyboardSDK when the user taps the app icon next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
     ///

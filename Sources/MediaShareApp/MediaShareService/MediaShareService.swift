@@ -29,6 +29,11 @@ class MediaShareService {
         case search(query: String, page: Int)
     }
     
+    enum ImpressionType {
+        case view
+        case share
+    }
+    
     private static let validResponseCodes: Set<Int> = [200]
                                     
     private let contentType: MediaShareRequestDTO.ContentType
@@ -36,7 +41,7 @@ class MediaShareService {
     private let sdkLicenseId: String
     
     private static let healthCheckMinWaitTime: TimeInterval = 600 // 10 minutes
-    @MainActor private static var healthCheckTask: Task<(HealthCheckResponse, Date), Error>?
+    @MainActor private static var healthCheckTask: Task<(SimpleResultResponse, Date), Error>?
         
     // MARK: - Init
     
@@ -83,6 +88,19 @@ class MediaShareService {
         return await makeMediaShareContentRequest(request)
     }
     
+    func sendImpresion(_ type: ImpressionType, for content: MediaShareContent, timeout: TimeInterval = MediaShareService.defaultTimeout) {
+        Task(priority: .background) {
+            let feature: MediaShareRequestDTO.Feature = switch type {
+            case .view: .viewTrigger(contentId: content.id)
+            case .share: .shareTrigger(contentId: content.id)
+            }
+            
+            let request = createContentRequest(for: feature, timeout: timeout)
+            let _: Result<SimpleResultResponse, BaseError> = await makeMediaShareAPIRequest(request)
+            return
+        }
+    }
+    
     // MARK: - Private methods
 
     @MainActor private func performHealthCheckRequestIfNeeded(timeout: TimeInterval = MediaShareService.defaultTimeout) async  {
@@ -99,7 +117,7 @@ class MediaShareService {
     @MainActor private func performHealthCheckRequest(timeout: TimeInterval) async {
         Self.healthCheckTask = Task {
             let request = createContentRequest(for: .healthCheck, timeout: timeout)
-            let result: Result<HealthCheckResponse, BaseError> = await makeMediaShareAPIRequest(request)
+            let result: Result<SimpleResultResponse, BaseError> = await makeMediaShareAPIRequest(request)
             return (try result.get(), Date())
         }
         _ = await Self.healthCheckTask?.result
