@@ -6,6 +6,7 @@
 
 import Foundation
 import BaseFleksyApp
+import WebKit
 
 /// The class that manages the MediaShare requests and the download of the media content to be shared by the user.
 ///
@@ -41,6 +42,8 @@ class MediaShareService {
     private let sdkLicenseId: String
     
     private static let healthCheckMinWaitTime: TimeInterval = 600 // 10 minutes
+    
+    @MainActor private static var userAgentTask: Task<String, Never>?
     @MainActor private static var healthCheckTask: Task<(SimpleResultResponse, Date), Error>?
         
     // MARK: - Init
@@ -69,13 +72,15 @@ class MediaShareService {
         case .search(let query, let page): .search(page: page, query: query)
         }
         
-        let request = createContentRequest(for: feature, timeout: timeout)
+        let navigatorUserAgent = await Self.retrieveNavigatorUserAgent()
+        let request = createContentRequest(for: feature, navigatorUserAgent: navigatorUserAgent, timeout: timeout)
         return await makeMediaShareAPIRequest(request)
     }
     
     func getTags(timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<PopularTagsResponse, BaseError> {
         await performHealthCheckRequestIfNeeded(timeout: timeout)
-        let request = createContentRequest(for: .tags, timeout: timeout)
+        let navigatorUserAgent = await Self.retrieveNavigatorUserAgent()
+        let request = createContentRequest(for: .tags, navigatorUserAgent: navigatorUserAgent, timeout: timeout)
         return await makeMediaShareAPIRequest(request)
     }
     
@@ -95,13 +100,37 @@ class MediaShareService {
             case .share: .shareTrigger(contentId: content.id)
             }
             
-            let request = createContentRequest(for: feature, timeout: timeout)
+            let navigatorUserAgent = await Self.retrieveNavigatorUserAgent()
+            let request = createContentRequest(for: feature, navigatorUserAgent: navigatorUserAgent, timeout: timeout)
             let _: Result<SimpleResultResponse, BaseError> = await makeMediaShareAPIRequest(request)
             return
         }
     }
     
     // MARK: - Private methods
+    
+    @MainActor private static func retrieveNavigatorUserAgent() async -> String {
+        if let userAgentTask {
+            return await userAgentTask.get()
+        } else {
+            let userAgentTask = Task {
+                let webView = WKWebView()
+                do {
+                    let result = try await webView.evaluateJavaScript("navigator.userAgent")
+                    if let navigatorUserAgent = result as? String {
+                        return navigatorUserAgent
+                    } else {
+                        return ""
+                    }
+                } catch {
+                    print("Error when retrieving navigator.userAgent: \(error)")
+                    return ""
+                }
+            }
+            self.userAgentTask = userAgentTask
+            return await userAgentTask.get()
+        }
+    }
 
     @MainActor private func performHealthCheckRequestIfNeeded(timeout: TimeInterval = MediaShareService.defaultTimeout) async  {
         if let healthCheckTask = Self.healthCheckTask,
@@ -116,15 +145,16 @@ class MediaShareService {
     
     @MainActor private func performHealthCheckRequest(timeout: TimeInterval) async {
         Self.healthCheckTask = Task {
-            let request = createContentRequest(for: .healthCheck, timeout: timeout)
+            let navigatorUserAgent = await Self.retrieveNavigatorUserAgent()
+            let request = createContentRequest(for: .healthCheck, navigatorUserAgent: navigatorUserAgent, timeout: timeout)
             let result: Result<SimpleResultResponse, BaseError> = await makeMediaShareAPIRequest(request)
             return (try result.get(), Date())
         }
         _ = await Self.healthCheckTask?.result
     }
     
-    private func createContentRequest(for feature: MediaShareRequestDTO.Feature, timeout: TimeInterval) -> URLRequest {
-        let mediaShareRequestDTO = MediaShareRequestDTO(content: contentType, feature: feature)
+    private func createContentRequest(for feature: MediaShareRequestDTO.Feature, navigatorUserAgent: String, timeout: TimeInterval) -> URLRequest {
+        let mediaShareRequestDTO = MediaShareRequestDTO(content: contentType, feature: feature, navigatorUserAgent: navigatorUserAgent)
         var request = URLRequest(url: Self.apiURL)
         
         request.httpMethod = "POST"

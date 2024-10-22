@@ -56,6 +56,7 @@ struct MediaShareRequestDTO: Encodable {
         case deviceMake
         case deviceModel
         case deviceIfa
+        case navigatorUserAgent = "userAgent"
     }
     
     let content: ContentType
@@ -71,12 +72,14 @@ struct MediaShareRequestDTO: Encodable {
     let deviceMake: String = "apple"
     let deviceModel: String = UIDevice.current.model
     let deviceIdfa: String? = UIDevice.idfa
+    let navigatorUserAgent: String
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(content, forKey: .content)
         try container.encode(userId, forKey: .userId)
         try container.encode(platform, forKey: .platform)
+        try container.encode(navigatorUserAgent, forKey: .navigatorUserAgent)
         
         let requiresAdsParameters: Bool
         
