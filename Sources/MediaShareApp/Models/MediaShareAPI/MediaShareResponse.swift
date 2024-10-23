@@ -43,7 +43,7 @@ struct MediaShareResponse: Decodable {
                 }
                 
                 var fileForThumbnailContent: File? {
-                    xs ?? sm ?? md ?? hd ?? self.default
+                    sm ?? md ?? xs ?? hd ?? self.default
                 }
             }
             
