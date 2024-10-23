@@ -552,7 +552,7 @@ extension BaseApp: BaseAppViewDelegate {
     
     
     @MainActor
-    func localURLForContentAt(index: Int) -> URL? {
+    func localURLAndTitleForContentAt(index: Int) -> (URL, String?)? {
         guard index < currentContents.count else {
             return nil
         }
@@ -560,7 +560,7 @@ extension BaseApp: BaseAppViewDelegate {
         guard case .remoteMedia(let remoteMedia) = content.contentType else {
             return nil
         }
-        return mediaManager.localFileURL(id: content.id, for: remoteMedia)
+        return (mediaManager.localFileURL(id: content.id, for: remoteMedia), remoteMedia.title)
     }
     
     func loadContentAt(index: Int) async {

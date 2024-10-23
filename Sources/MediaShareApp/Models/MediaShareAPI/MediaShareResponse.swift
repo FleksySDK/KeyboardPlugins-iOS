@@ -108,7 +108,13 @@ private extension MediaShareResponse.Content {
         default: .image
         }
         
-        guard let thumbnailMedia = RemoteMedia(urlString: thumbnailFile.url,
+        let userFacingTitle: String? = switch contentType {
+        case .clips: title
+        case .gifs, .stickers: nil
+        }
+        
+        guard let thumbnailMedia = RemoteMedia(title: userFacingTitle,
+                                               urlString: thumbnailFile.url,
                                                fileExtension: videoItemWithExtension.extension,
                                                width: thumbnailFile.width,
                                                height: thumbnailFile.height,

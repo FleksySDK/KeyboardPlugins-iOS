@@ -14,7 +14,7 @@ protocol ListViewDelegate: AnyObject {
     
     /// Always return the local URL of the file, even if it hasn't been downloaded yet.
     @MainActor
-    func localURLForContentAt(index: Int) -> URL?
+    func localURLAndTitleForContentAt(index: Int) -> (URL, String?)?
     
     /// Tells the delegate that the still-unavailable content at `index` needs to shown now.
     ///
@@ -223,15 +223,15 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
 
         switch cell {
         case let videoCell as VideoCell:
-            if let url = delegate.localURLForContentAt(index: index),
-               !videoCell.loadMedia(localURL: url, autoplay: true, audioToggle: delegate.allowAudioInVideoCells, delegate: self) {
+            if let (url, title) = delegate.localURLAndTitleForContentAt(index: index),
+               !videoCell.loadMedia(localURL: url, title: title, autoplay: true, audioToggle: delegate.allowAudioInVideoCells, delegate: self) {
                 Task.detached {
                     await delegate.loadContentAt(index: index)
                     await videoCell.forceLoadMedia(localURL: url, autoplay: true)
                 }
             }
         case let imageCell as ImageCell:
-            if let url = delegate.localURLForContentAt(index: index),
+            if let (url, _) = delegate.localURLAndTitleForContentAt(index: index),
                !imageCell.loadImage(localURL: url) {
                 Task {
                     await delegate.loadContentAt(index: index)

@@ -25,8 +25,7 @@ class VideoCell: BaseAppCell<VideoPlayerView> {
     
     override var appTheme: AppTheme? {
         didSet {
-            audioToggleButton.backgroundColor = appTheme?.bestContrastColorForForeground.withAlphaComponent(0.5)
-            audioToggleButton.tintColor = appTheme?.foreground
+            updateForTheme()
         }
     }
     
@@ -43,6 +42,18 @@ class VideoCell: BaseAppCell<VideoPlayerView> {
         return audioToggleButton
     }()
     
+    private lazy var viewContainerLabel = GradientView()
+    
+    private lazy var titleLabel: UILabel = {
+        let lb = UILabel()
+        lb.textAlignment = .natural
+        lb.numberOfLines = 2
+        lb.adjustsFontSizeToFitWidth = true
+        lb.minimumScaleFactor = 0.8
+        lb.baselineAdjustment = .alignBaselines
+        return lb
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -57,21 +68,33 @@ class VideoCell: BaseAppCell<VideoPlayerView> {
         stopPlayback()
     }
     
+    override func layoutSubviews() {
+        updateTitleFont()
+        super.layoutSubviews()
+    }
+    
     // MARK: - Interface methods
     
     /// It could happen that there's no file at `localURL` yet. In that case, calling this method shows the loader in the cell.
     /// - Parameters:
     ///   - localURL: The url to the local video.
+    ///   - title: An optional title to show on the video.
     ///   - autoplay: Whether or not the video should autoplay.
     ///   - audioToggle: Whether or not the video cell should show a button to play the video with sound.
     ///   - delegate: The object to which to send video playback events callbacks.
     /// - Returns: Whether or not the video in the given url was loaded.
     @MainActor
-    func loadMedia(localURL: URL, autoplay: Bool, audioToggle: Bool, delegate: VideoCellDelegate) -> Bool {
+    func loadMedia(localURL: URL, title: String?, autoplay: Bool, audioToggle: Bool, delegate: VideoCellDelegate) -> Bool {
         showLoader()
         self.delegate = delegate
-        fileURL = localURL
+        
+        titleLabel.text = title
+        let hideLabelContainer = title?.isEmpty ?? true
+        viewContainerLabel.isHidden = hideLabelContainer
+        
         audioToggleButton.isHidden = !audioToggle
+        
+        fileURL = localURL
         return loadVideoURL(localURL, autoplay: autoplay)
     }
     
@@ -143,20 +166,87 @@ class VideoCell: BaseAppCell<VideoPlayerView> {
         audioToggleButton.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(audioToggleButton)
         
+        viewContainerLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(viewContainerLabel)
+        
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        viewContainerLabel.addSubview(titleLabel)
+        
         let btnWidth: CGFloat = 34
         
         let widthConstraint = audioToggleButton.widthAnchor.constraint(equalToConstant: btnWidth)
         widthConstraint.priority = .defaultHigh
         NSLayoutConstraint.activate([
             audioToggleButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4),
-            audioToggleButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
-            audioToggleButton.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 4),
+            audioToggleButton.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -4),
+            audioToggleButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             audioToggleButton.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 4),
             audioToggleButton.widthAnchor.constraint(equalTo: audioToggleButton.heightAnchor),
-            widthConstraint
+            widthConstraint,
+            
+            viewContainerLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            viewContainerLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            viewContainerLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            viewContainerLabel.heightAnchor.constraint(lessThanOrEqualTo: contentView.heightAnchor),
+            
+            titleLabel.leadingAnchor.constraint(equalTo: viewContainerLabel.leadingAnchor, constant: 10),
+            titleLabel.trailingAnchor.constraint(equalTo: viewContainerLabel.trailingAnchor, constant: -10),
+            titleLabel.topAnchor.constraint(equalTo: viewContainerLabel.topAnchor, constant: 10),
+            titleLabel.lastBaselineAnchor.constraint(equalTo: viewContainerLabel.bottomAnchor, constant: -10),
         ])
+        
+        titleLabel.setContentHuggingPriority(.required, for: .vertical)
         
         audioToggleButton.layer.cornerRadius = btnWidth / 2
         audioToggleButton.layer.masksToBounds = true
+        
+        // Fixed colors for the overlays on the video cell
+        audioToggleButton.backgroundColor = .black.withAlphaComponent(0.5)
+        audioToggleButton.tintColor = .white
+        viewContainerLabel.colors = [.black.withAlphaComponent(0),
+                                     .black.withAlphaComponent(0.7)]
+        
+        titleLabel.textColor = .white
+    }
+    
+    private func updateForTheme() {
+        guard let appTheme else {
+            return
+        }
+        updateTitleFont()
+    }
+    
+    private func updateTitleFont() {
+        guard let appTheme else {
+            return
+        }
+        var font = UIFontMetrics(forTextStyle: .footnote).scaledFont(for: appTheme.font.withSize(UIFont.labelFontSize))
+        let maxFontSize = bounds.height / 6 // So that 2 lines don't ever take up more than 1/3 of the height
+        if font.pointSize > maxFontSize {
+            font = font.withSize(maxFontSize)
+        }
+        titleLabel.font = font
+    }
+}
+
+fileprivate class GradientView: UIView {
+    override open class var layerClass: AnyClass {
+       return CAGradientLayer.classForCoder()
+    }
+    
+    private var gradientLayer: CAGradientLayer {
+        layer as! CAGradientLayer
+    }
+    
+    var colors: [UIColor] {
+        get {
+            let colors: [CGColor] = gradientLayer.colors as? [CGColor] ?? []
+            return colors.map {
+                UIColor(cgColor: $0 as CGColor)
+            }
+        }
+        set {
+            gradientLayer.colors = newValue.map { $0.cgColor }
+        }
     }
 }
