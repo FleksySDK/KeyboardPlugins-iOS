@@ -616,6 +616,7 @@ extension BaseApp: BaseAppViewDelegate {
     }
     
     func willShowItemAt(index: Int) {
+        willShowContent(currentContents[index])
         if index >= currentContents.count - 2 {
             loadNextPage()
         }
