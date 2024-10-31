@@ -30,11 +30,6 @@ class MediaShareService {
         case search(query: String, page: Int)
     }
     
-    enum ImpressionType {
-        case view
-        case share
-    }
-    
     private static let validResponseCodes: Set<Int> = [200]
                                     
     private let contentType: MediaShareRequestDTO.ContentType
@@ -58,7 +53,7 @@ class MediaShareService {
     
     func scheduleHealthCheckIfNeeded() {
         Task {
-            let initialDelay: UInt64 = 10_000_000_000
+            let initialDelay: UInt64 = UInt64.random(in: 2...10) * 1_000_000_000
             try await Task.sleep(nanoseconds: initialDelay)
             await performHealthCheckRequestIfNeeded()
         }
@@ -93,13 +88,9 @@ class MediaShareService {
         return await makeMediaShareContentRequest(request)
     }
     
-    func sendImpresion(_ type: ImpressionType, for content: MediaShareContent, timeout: TimeInterval = MediaShareService.defaultTimeout) {
+    func sendShareImpresion(for content: MediaShareContent, timeout: TimeInterval = MediaShareService.defaultTimeout) {
         Task(priority: .background) {
-            let feature: MediaShareRequestDTO.Feature = switch type {
-            case .view: .viewTrigger(contentId: content.id)
-            case .share: .shareTrigger(contentId: content.id)
-            }
-            
+            let feature = MediaShareRequestDTO.Feature.shareTrigger(contentId: content.id)
             let navigatorUserAgent = await Self.retrieveNavigatorUserAgent()
             let request = createContentRequest(for: feature, navigatorUserAgent: navigatorUserAgent, timeout: timeout)
             let _: Result<SimpleResultResponse, BaseError> = await makeMediaShareAPIRequest(request)

@@ -103,6 +103,8 @@ class CategoryView<Category: BaseCategory>: UIView, UICollectionViewDelegate {
         collectionView.delegate = self
         collectionView.dataSource = dataSource
         collectionView.contentInset = listInsets
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsHorizontalScrollIndicator = false
     }
     
     private func registerCells() {

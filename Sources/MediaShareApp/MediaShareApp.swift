@@ -116,7 +116,10 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     
     public override func getListViewConfiguration(forViewMode viewMode: KeyboardAppViewMode) -> ListViewConfiguration {
         var configuration = super.getListViewConfiguration(forViewMode: viewMode)
-        configuration.bands = 1
+        configuration.bands = switch contentType {
+        case .clips, .stickers: 1
+        case .gifs: 2
+        }
         return configuration
     }
     
@@ -125,7 +128,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     /// Performs the action after the user selects a given content in the app.
     /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func didSelectContent(_ content: MediaShareContent) {
-        service.sendImpresion(.share, for: content)
+        service.sendShareImpresion(for: content)
         currentContentSelectionTask?.cancel()
         currentContentSelectionTask = Task.detached(priority: .userInitiated) { [weak self] in
             guard let self else { return }
@@ -154,10 +157,6 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
                 await self.hideToastAndWait()
             }
         }
-    }
-    
-    public override func willShowContent(_ content: MediaShareContent) {
-        service.sendImpresion(.view, for: content)
     }
     
     // MARK: - Private methods

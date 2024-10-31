@@ -17,6 +17,11 @@ class WebViewCell: BaseAppCell<WKWebView> {
     override init(frame: CGRect) {
         super.init(frame: frame)
         webView.navigationDelegate = self
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
+        webView.isOpaque = false
+//        self.contentView.backgroundColor = .clear
+//        self.backgroundColor = .clear
     }
     
     required init?(coder: NSCoder) {
@@ -28,6 +33,7 @@ class WebViewCell: BaseAppCell<WKWebView> {
         self.expectedContentSize = expectedContentSize
         webView.loadHTMLString(html, baseURL: nil)
         webView.scrollView.isScrollEnabled = false
+        hideContentError()
     }
     
     override var frame: CGRect {
@@ -39,6 +45,12 @@ class WebViewCell: BaseAppCell<WKWebView> {
     override var bounds: CGRect {
         didSet {
             computeWebViewScaleFactor()
+        }
+    }
+    
+    override var appTheme: AppTheme? {
+        didSet {
+//            self.backgroundColor = .clear
         }
     }
     

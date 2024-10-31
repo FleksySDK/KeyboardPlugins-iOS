@@ -27,11 +27,7 @@ struct MediaShareRequestDTO: Encodable {
         /// - Parameter page: The requested page number. Minimum value 1.
         /// - Parameter query: The query String  for finding relevant content.
         case search(page: Int, query: String)
-        
-        /// Content displayed to the user.
-        /// - Parameter contentId: The ID of the content displayed to the user.
-        case viewTrigger(contentId: String)
-        
+                
         /// Content selected by the user for sharing.
         /// - Parameter contentId: The ID of the content selected by the user.
         case shareTrigger(contentId: String)
@@ -63,10 +59,10 @@ struct MediaShareRequestDTO: Encodable {
     let feature: Feature
     let userId: String = (UIDevice.current.identifierForVendor ?? UUID()).uuidString
     let platform: String = UIDevice.current.systemName
-    let adMinWidth: Int = 100
+    let adMinWidth: Int = 50
     let adMaxWidth: Int = 320
-    let adMinHeight: Int = 100
-    let adMaxHeight: Int = 250
+    let adMinHeight: Int = 50
+    let adMaxHeight: Int = 320
     let deviceOperatingSystemVersion: String = UIDevice.current.systemVersion
     let deviceHardwareVersion: String = UIDevice.modelIdentifier
     let deviceMake: String = "apple"
@@ -99,10 +95,6 @@ struct MediaShareRequestDTO: Encodable {
             try container.encode(query, forKey: .query)
             try container.encode(page, forKey: .page)
             requiresAdsParameters = true
-        case .viewTrigger(let contentId):
-            try container.encode("viewTrigger", forKey: .feature)
-            try container.encode(contentId, forKey: .contentId)
-            requiresAdsParameters = false
         case .shareTrigger(let contentId):
             try container.encode("shareTrigger", forKey: .feature)
             try container.encode(contentId, forKey: .contentId)
