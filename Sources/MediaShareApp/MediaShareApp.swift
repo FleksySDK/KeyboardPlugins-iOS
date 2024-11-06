@@ -86,7 +86,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     /// - Important: **Do not call this method at any point**. This method is public only because it overrides the same method of the `BaseApp`.
     public override func getDefaultContentsFor(pagination: Pagination) async -> Result<[MediaShareContent], BaseError> {
         await setSelectedCategory(MediaShareCategory.trendingCategory(for: contentType))
-        return await service.getContent(.trending(page: pagination.page + 1)).map {
+        return await service.getContent(.trending(page: pagination.page + 1), adMaxHeight: Int(contentSideLength)).map {
             $0.toResults(contentType: contentType)
         }
     }
@@ -114,13 +114,26 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
         return categories ?? []
     }
     
+    public override func didFinishLoadingCategories() {
+        guard let appListener, let currentViewMode = appListener.currentViewMode else {
+            return
+        }
+        guard case .frame = currentViewMode else {
+            // No height change in case of full cover
+            return
+        }
+        // To reload the height
+        appListener.show(mode: currentViewMode)
+    }
+    
     public override func getListViewConfiguration(forViewMode viewMode: KeyboardAppViewMode) -> ListViewConfiguration {
         var configuration = super.getListViewConfiguration(forViewMode: viewMode)
-        configuration.bands = switch contentType {
-        case .clips, .stickers: 1
-        case .gifs: 2
-        }
+        configuration.bands = 1
         return configuration
+    }
+    
+    public override var frameHeight: BaseApp<MediaShareContent, MediaShareCategory>.ViewHeight {
+        return currentCategories.isEmpty ? .custom(102) : .custom(146)
     }
     
     private var currentContentSelectionTask: Task<Void, Never>?
@@ -164,7 +177,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     private func getSearchResultsFor(nonEmptyQuery query: String, pagination: Pagination) async -> Result<[MediaShareContent], BaseError> {
         let equivalentCategory = currentCategories.first(where: { $0.query.caseInsensitiveCompare(query) == .orderedSame })
         await setSelectedCategory(equivalentCategory)
-        return await service.getContent(.search(query: query, page: pagination.page + 1)).map {
+        return await service.getContent(.search(query: query, page: pagination.page + 1), adMaxHeight: Int(contentSideLength)).map {
             $0.toResults(contentType: contentType)
         }
     }

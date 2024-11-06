@@ -36,6 +36,9 @@ protocol ListViewDelegate: AnyObject {
     @MainActor
     func absoluteSizeForItemAt(index: Int) -> CGSize
     
+    @MainActor
+    func shouldResizeItem(at index: Int) -> Bool
+    
     func willUnmuteAudioInVideoCell()
     
     func willStartVideoPlaybackInVideoCell()
@@ -122,6 +125,15 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
     
     // MARK: - Interface
     
+    /// Returns the cells height for horizontally scrolling layout and the cells width for vertically scrolling layout.
+    var cellSideLenght: CGFloat {
+        guard let mosaicLayout = collectionView.collectionViewLayout as? MosaicLayout else {
+            fatalError("Only use MosaicLayout as collectionViewLayout.")
+        }
+        let cellSideLength = mosaicLayout.cellSideLength
+        return cellSideLength
+    }
+    
     func scrollToStart() {
         collectionView.setContentOffset(.zero, animated: false)
     }
@@ -198,7 +210,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
         self.collectionView.tintColor = self.appTheme.foreground
     }
     
-    private func createLayout() -> UICollectionViewLayout {
+    private func createLayout() -> MosaicLayout {
         let layout = MosaicLayout(numberOfBands: configuration.bands,
                                   cellPadding: configuration.cellPadding,
                                   direction: configuration.direction)
@@ -266,6 +278,10 @@ extension ListView: MosaicLayoutDelegate {
     
     func collectionView(_ collectionView: UICollectionView, absoluteSizeForItemAtIndexPath indexPath: IndexPath) -> CGSize {
         delegate?.absoluteSizeForItemAt(index: indexPath.item) ?? CGSize(width: 1, height: 1)
+    }
+    
+    func shouldResizeItem(at indexPath: IndexPath) -> Bool {
+        delegate?.shouldResizeItem(at: indexPath.item) ?? true
     }
 }
 

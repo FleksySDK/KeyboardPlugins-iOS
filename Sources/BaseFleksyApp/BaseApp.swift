@@ -16,6 +16,22 @@ import AVKit
 /// - Important: This class is only meant to be subclassed. Do not use this class as is.
 open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardApp {
     
+    /// Defines the possible height values to use for the keyboard app in the different modes.
+    public enum ViewHeight {
+        /// The keyboard app uses the default height as defined by the SDK.
+        case `default`
+        
+        /// A custom height for the keyboard app.
+        case custom(CGFloat)
+        
+        internal var appViewModeHeight: KeyboardAppViewMode.Height {
+            switch self {
+            case .default: return .default
+            case .custom: return .automatic
+            }
+        }
+    }
+    
     public typealias BaseContentResult = Result<[ContentType], BaseError>
     private typealias BaseContentTask = Task<BaseContentResult, Never>
     
@@ -62,8 +78,20 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         currentCategories.first
     }
     
-    /// Whether the keyboard app should include the toggle for the user to enable audio in video previews. Detaults to `true`.
+    /// Whether the keyboard app should include the toggle for the user to enable audio in video previews. Defaults to `true`.
+    ///
+    /// Optionally override this property to change the allow audio behavior of video previews.
     open var allowAudioInVideoPreviews: Bool { true }
+    
+    /// The height to use when the keyboard app is shown in frame mode. Defaults to  ``FrameModeHeight-swift.enum/default``.
+    ///
+    /// Optionally override this property to return the desired height for frame mode.
+    open var frameHeight: ViewHeight { .default }
+    
+    /// The height to use when the keyboard app is shown in full cover mode. Defaults to  ``FrameModeHeight-swift.enum/default``.
+    ///
+    /// Optionally override this property to return the desired height for full cover mode.
+    open var fullCoverHeight: ViewHeight { .default }
     
     /// The current `AppListener`.
     ///
@@ -71,6 +99,15 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     public internal(set) var appListener: AppListener?
     
     private var appView: BaseAppView<ContentType, Category>?
+    
+    private var customHeightConstraint: NSLayoutConstraint?
+    
+    /// Returns the contents height, in points, for horizontally scrolling layout and the contents width, in points, for vertically scrolling layout.
+    ///
+    /// This length directly depends on the available height to show content, on the number of bands and on the cell padding (see ``getListViewConfiguration(forViewMode:)``).
+    public var contentSideLength: CGFloat {
+        appView?.contentSideLength ?? 0
+    }
     
     /// Initialises and returns a newly allocated base app object with the specified ID.
     /// - Parameters:
@@ -109,7 +146,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// The view mode for the FleksyApp when opened from the carousel. The ``BaseApp`` returns `KeyboardAppViewMode.fullCover`
     ///
     /// Override this property if your FleksyApp needs a different initial view mode.
-    open var defaultViewMode: KeyboardAppViewMode { .fullCover() }
+    open var defaultViewMode: KeyboardAppViewMode { .fullCover(height: fullCoverHeight.appViewModeHeight) }
     
     /// Invoked when the app is about to be opened. Returns the view to use for the FleksyApp.
     ///
@@ -130,6 +167,20 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         } else {
             view = BaseAppView(viewMode: viewMode, appTheme: theme, delegate: self, listViewConfiguration: listViewConfiguration, searchText: configuration.searchButtonText)
             appView = view
+        }
+        
+        let viewHeight: ViewHeight = switch viewMode {
+        case .frame: frameHeight
+        case .fullCover: fullCoverHeight
+        }
+        
+        customHeightConstraint?.isActive = false
+        switch viewHeight {
+        case .default:
+            customHeightConstraint = nil
+        case .custom(let height):
+            customHeightConstraint = appView?.heightAnchor.constraint(equalToConstant: height)
+            customHeightConstraint?.isActive = true
         }
 
         if currentCategories.isEmpty {
@@ -243,6 +294,12 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         return []
     }
     
+    /// This method gets executed when the ``currentCategories`` array has been loaded.
+    ///
+    /// Override this method in case some logic needs to be implemented when this happens. The default implementation of this method does nothing. So you don't need to call `super`'s implementation.
+    @MainActor
+    open func didFinishLoadingCategories() {}
+    
     
     /// Override this method to perform any desired action when the user taps a content cell.
     /// - Parameter content: The content object tapped by the user.
@@ -264,7 +321,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
     @MainActor
     open func onAppIconAction() {
-        appListener?.show(mode: .fullCover())
+        appListener?.show(mode: .fullCover(height: fullCoverHeight.appViewModeHeight))
     }
     
     /// Optionally override this method to return a custom error message for the FleksyApp based on the error.
@@ -475,6 +532,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
             await MainActor.run { [weak self] in
                 self?.currentCategories = categories
                 self?.appView?.reloadCategories(categories)
+                self?.didFinishLoadingCategories()
             }
         }
         activeCategoriesTask = categoriesTask
@@ -545,7 +603,7 @@ extension BaseApp: BaseAppViewDelegate {
     ///
     /// - Important: Do not call this method form the ``BaseApp`` subclass.
     func onSearchAction() {
-        appListener?.show(mode: .frame(barMode: .appTextField(delegate: self)))
+        appListener?.show(mode: .frame(barMode: .appTextField(delegate: self), height: frameHeight.appViewModeHeight))
     }
     
     // MARK: - ListViewDelegate
@@ -646,7 +704,7 @@ extension BaseApp: BaseAppViewDelegate {
     
     @MainActor
     func absoluteSizeForItemAt(index: Int) -> CGSize {
-        guard index < currentContents.count else {
+        guard index < currentContents.endIndex else {
             return .zero
         }
         switch currentContents[index].contentType {
@@ -654,6 +712,19 @@ extension BaseApp: BaseAppViewDelegate {
             return CGSize(width: remoteMedia.width, height: remoteMedia.height)
         case .html(_, let width, let height):
             return CGSize(width: width, height: height)
+        }
+    }
+    
+    @MainActor
+    func shouldResizeItem(at index: Int) -> Bool {
+        guard index < currentContents.endIndex else {
+            return true
+        }
+        switch currentContents[index].contentType {
+        case .remoteMedia:
+            return true
+        case .html:
+            return false
         }
     }
     

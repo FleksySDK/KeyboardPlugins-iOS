@@ -11,6 +11,9 @@ protocol MosaicLayoutDelegate: AnyObject {
     func collectionView(
         _ collectionView: UICollectionView,
         absoluteSizeForItemAtIndexPath indexPath: IndexPath) -> CGSize
+    
+    /// Returning `false` means that the item may probably not preserve its aspect ratio.
+    func shouldResizeItem(at indexPath: IndexPath) -> Bool
 }
 
 /// Grid layout with support for one section only.
@@ -40,6 +43,15 @@ class MosaicLayout: UICollectionViewLayout {
             fatalError()
         }
         return max(computedContentLength, 0)
+    }
+    
+    /// Returns the cells height for horizontally scrolling layout and the cells width for vertically scrolling layout.
+    var cellSideLength: CGFloat {
+        let totalAvailableLength = contentSideLength
+        guard numberOfBands > 0 else {
+            return totalAvailableLength
+        }
+        return (totalAvailableLength / CGFloat(numberOfBands)) - (2 * cellPadding)
     }
     
     override var collectionViewContentSize: CGSize {
@@ -141,16 +153,25 @@ class MosaicLayout: UICollectionViewLayout {
         
         indexPaths.forEach {
             let itemSize = delegate?.collectionView(collectionView, absoluteSizeForItemAtIndexPath: $0) ?? .zero
+            let shouldResizeItem = delegate?.shouldResizeItem(at: $0) ?? true
             var length: CGFloat
             let frame: CGRect
             switch direction {
             case .vertical:
-                length = itemSize.width > 0 ? (bandSide - 2 * cellPadding) * (itemSize.height / itemSize.width) + 2 * cellPadding : 0
+                if shouldResizeItem || itemSize.width > bandSide {
+                    length = itemSize.width > 0 ? (bandSide - 2 * cellPadding) * (itemSize.height / itemSize.width) + 2 * cellPadding : 0
+                } else {
+                    length = itemSize.height
+                }
                 length = min(length, UIScreen.main.bounds.height - (collectionView.contentInset.top + collectionView.contentInset.bottom))
                 frame = CGRect(x: sideOffset[band], y: contentLengths[band],
                                width: bandSide, height: length)
             case .horizontal:
-                length = itemSize.height > 0 ? (bandSide - 2 * cellPadding) * (itemSize.width / itemSize.height) + 2 * cellPadding : 0
+                if shouldResizeItem || itemSize.height > bandSide {
+                    length = itemSize.height > 0 ? (bandSide - 2 * cellPadding) * (itemSize.width / itemSize.height) + 2 * cellPadding : 0
+                } else {
+                    length = itemSize.width
+                }
                 length = min(length, UIScreen.main.bounds.width - (collectionView.contentInset.left + collectionView.contentInset.right))
                 frame = CGRect(x: contentLengths[band], y: sideOffset[band],
                                width: length, height: bandSide)

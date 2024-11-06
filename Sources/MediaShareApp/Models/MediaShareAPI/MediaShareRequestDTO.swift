@@ -55,6 +55,8 @@ struct MediaShareRequestDTO: Encodable {
         case navigatorUserAgent = "userAgent"
     }
     
+    static let adMaxSupportedHeight: Int = 320
+    
     let content: ContentType
     let feature: Feature
     let userId: String = (UIDevice.current.identifierForVendor ?? UUID()).uuidString
@@ -62,7 +64,7 @@ struct MediaShareRequestDTO: Encodable {
     let adMinWidth: Int = 50
     let adMaxWidth: Int = 320
     let adMinHeight: Int = 50
-    let adMaxHeight: Int = 320
+    let adMaxHeight: Int
     let deviceOperatingSystemVersion: String = UIDevice.current.systemVersion
     let deviceHardwareVersion: String = UIDevice.modelIdentifier
     let deviceMake: String = "apple"

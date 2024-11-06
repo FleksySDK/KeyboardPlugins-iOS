@@ -59,7 +59,7 @@ class MediaShareService {
         }
     }
     
-    func getContent(_ content: Content, timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<MediaShareResponse, BaseError> {
+    func getContent(_ content: Content, adMaxHeight: Int, timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<MediaShareResponse, BaseError> {
         await performHealthCheckRequestIfNeeded(timeout: timeout)
         
         let feature: MediaShareRequestDTO.Feature = switch content {
@@ -68,14 +68,14 @@ class MediaShareService {
         }
         
         let navigatorUserAgent = await Self.retrieveNavigatorUserAgent()
-        let request = createContentRequest(for: feature, navigatorUserAgent: navigatorUserAgent, timeout: timeout)
+        let request = createContentRequest(for: feature, navigatorUserAgent: navigatorUserAgent, adMaxHeight: adMaxHeight, timeout: timeout)
         return await makeMediaShareAPIRequest(request)
     }
     
     func getTags(timeout: TimeInterval = MediaShareService.defaultTimeout) async -> Result<PopularTagsResponse, BaseError> {
         await performHealthCheckRequestIfNeeded(timeout: timeout)
         let navigatorUserAgent = await Self.retrieveNavigatorUserAgent()
-        let request = createContentRequest(for: .tags, navigatorUserAgent: navigatorUserAgent, timeout: timeout)
+        let request = createContentRequest(for: .tags, navigatorUserAgent: navigatorUserAgent, adMaxHeight: MediaShareRequestDTO.adMaxSupportedHeight, timeout: timeout)
         return await makeMediaShareAPIRequest(request)
     }
     
@@ -144,8 +144,8 @@ class MediaShareService {
         _ = await Self.healthCheckTask?.result
     }
     
-    private func createContentRequest(for feature: MediaShareRequestDTO.Feature, navigatorUserAgent: String, timeout: TimeInterval) -> URLRequest {
-        let mediaShareRequestDTO = MediaShareRequestDTO(content: contentType, feature: feature, navigatorUserAgent: navigatorUserAgent)
+    private func createContentRequest(for feature: MediaShareRequestDTO.Feature, navigatorUserAgent: String, adMaxHeight: Int = MediaShareRequestDTO.adMaxSupportedHeight, timeout: TimeInterval) -> URLRequest {
+        let mediaShareRequestDTO = MediaShareRequestDTO(content: contentType, feature: feature, adMaxHeight: adMaxHeight, navigatorUserAgent: navigatorUserAgent)
         var request = URLRequest(url: Self.apiURL)
         
         request.httpMethod = "POST"

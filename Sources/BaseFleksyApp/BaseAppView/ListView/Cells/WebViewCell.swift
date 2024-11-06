@@ -57,41 +57,11 @@ class WebViewCell: BaseAppCell<WKWebView> {
         var scaleFactor: CGFloat = 1
         var contentSize = bounds.size
         if let expectedContentSize {
-            scaleFactor = min(bounds.width / expectedContentSize.width, bounds.height / expectedContentSize.height)
-            contentSize = expectedContentSize.applying(CGAffineTransform(scaleX: scaleFactor, y: scaleFactor))
-            setSizeConstraints(contentSize)
-        } else {
-            removeSizeConstraints()
+            scaleFactor = min(bounds.width / expectedContentSize.width, bounds.height / expectedContentSize.height, 1) // Only scale down, never up
         }
         if #available(iOS 14.0, *) {
             webView.pageZoom = scaleFactor
         }
-    }
-    
-    private var heightConstraint: NSLayoutConstraint?
-    private var widthConstraint: NSLayoutConstraint?
-    
-    private func setSizeConstraints(_ size: CGSize) {
-        if let heightConstraint {
-            heightConstraint.constant = size.height
-        } else {
-            heightConstraint = webView.heightAnchor.constraint(equalToConstant: size.height)
-        }
-        heightConstraint?.isActive = true
-        
-        if let widthConstraint {
-            widthConstraint.constant = size.width
-        } else {
-            widthConstraint = webView.widthAnchor.constraint(equalToConstant: size.width)
-        }
-        widthConstraint?.isActive = true
-    }
-    
-    private func removeSizeConstraints() {
-        heightConstraint?.isActive = false
-        heightConstraint = nil
-        widthConstraint?.isActive = false
-        widthConstraint = nil
     }
 }
 
