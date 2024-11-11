@@ -105,7 +105,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// Returns the contents height, in points, for horizontally scrolling layout and the contents width, in points, for vertically scrolling layout.
     ///
     /// This length directly depends on the available height to show content, on the number of bands and on the cell padding (see ``getListViewConfiguration(forViewMode:)``).
-    public var contentSideLength: CGFloat {
+    @MainActor public var contentSideLength: CGFloat {
         appView?.contentSideLength ?? 0
     }
     

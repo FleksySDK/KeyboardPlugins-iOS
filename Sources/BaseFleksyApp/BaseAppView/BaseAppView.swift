@@ -99,7 +99,7 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
     // MARK: - Interface
     
     /// Returns the contents height, in points, for horizontally scrolling layout and the contents width, in points, for vertically scrolling layout.
-    var contentSideLength: CGFloat {
+    @MainActor var contentSideLength: CGFloat {
         listView.cellSideLenght
     }
     

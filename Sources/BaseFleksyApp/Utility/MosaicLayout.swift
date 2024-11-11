@@ -28,7 +28,8 @@ class MosaicLayout: UICollectionViewLayout {
     private var cache: [UICollectionViewLayoutAttributes] = []
     
     private var contentLengths: [CGFloat] = [0]
-    private var contentSideLength: CGFloat {
+    
+    @MainActor private var contentSideLength: CGFloat {
         guard let collectionView else {
             return 0
         }
@@ -46,7 +47,7 @@ class MosaicLayout: UICollectionViewLayout {
     }
     
     /// Returns the cells height for horizontally scrolling layout and the cells width for vertically scrolling layout.
-    var cellSideLength: CGFloat {
+    @MainActor var cellSideLength: CGFloat {
         let totalAvailableLength = contentSideLength
         guard numberOfBands > 0 else {
             return totalAvailableLength

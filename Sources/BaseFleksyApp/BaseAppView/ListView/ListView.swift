@@ -126,7 +126,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
     // MARK: - Interface
     
     /// Returns the cells height for horizontally scrolling layout and the cells width for vertically scrolling layout.
-    var cellSideLenght: CGFloat {
+    @MainActor var cellSideLenght: CGFloat {
         guard let mosaicLayout = collectionView.collectionViewLayout as? MosaicLayout else {
             fatalError("Only use MosaicLayout as collectionViewLayout.")
         }
