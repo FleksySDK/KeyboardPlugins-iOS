@@ -150,7 +150,7 @@ private extension MediaShareResponse.Content.FileFormats {
         case .gifs:
             return getGifWithPasteboardType() ?? getWebpWithPasteboardType() ?? getMp4WithPasteboardType()
         case .stickers:
-            return getWebpWithPasteboardType() ?? getGifWithPasteboardType() ?? getMp4WithPasteboardType()
+            return getMp4WithPasteboardType() ?? getWebpWithPasteboardType() ?? getGifWithPasteboardType()
         }
     }
     
