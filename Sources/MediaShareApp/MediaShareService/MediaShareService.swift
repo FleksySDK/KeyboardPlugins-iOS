@@ -15,7 +15,7 @@ class MediaShareService {
     
     typealias ContentDataResult = Result<Data, BaseError>
     
-    static let apiURL = URL(string: "https://vvtzm33i71.execute-api.eu-west-1.amazonaws.com/Prod/api/v1/routing")!
+    static let apiURL = URL(string: "https://api.thingthing.co/plugins/api/v1/routing")!
         
     static let defaultTimeout: TimeInterval = 60
         
