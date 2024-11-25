@@ -10,6 +10,10 @@ import FleksyAppsCore
 
 /// Superclass of cells to avoid repeating functionality. The use of this class is not required.
 class BaseAppCell<ViewContent: UIView>: UICollectionViewCell {
+    
+    /// The view that holds the cell's content.
+    ///
+    /// It's centered vertically and horizontally in the cell and has the same height and width with lower priority. Use required properties to change its height or width, although it will always remain centered in the cell.
     let viewContent = ViewContent()
     private let contentErrorView = UIImageView(image: BaseConstants.Images.previewErrorImage)
     private let loader = UIActivityIndicatorView(style: .medium)
@@ -78,11 +82,20 @@ class BaseAppCell<ViewContent: UIView>: UICollectionViewCell {
         loader.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(loader)
         
+        let leadingConstraint = viewContent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor)
+        leadingConstraint.priority = .defaultHigh
+        
+        let topConstraint = viewContent.topAnchor.constraint(equalTo: contentView.topAnchor)
+        topConstraint.priority = .defaultHigh
+        
         NSLayoutConstraint.activate([
-            viewContent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            viewContent.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            viewContent.topAnchor.constraint(equalTo: contentView.topAnchor),
-            viewContent.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            leadingConstraint,
+            viewContent.widthAnchor.constraint(lessThanOrEqualTo: contentView.widthAnchor),
+            topConstraint,
+            viewContent.heightAnchor.constraint(lessThanOrEqualTo: contentView.heightAnchor),
+            
+            viewContent.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            viewContent.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             
             contentErrorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             contentErrorView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),

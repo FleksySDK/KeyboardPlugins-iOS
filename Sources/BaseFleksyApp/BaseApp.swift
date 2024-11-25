@@ -8,12 +8,29 @@
 import UIKit
 import FleksyAppsCore
 import SwiftUI
+import AVKit
 
 /// An object that handles the processes of a FleksyApp.
 ///
 /// If the category selection view is not needed, you can use `Never` as the `Category` type in your subclass of ``BaseFleksyApp/BaseApp``.
 /// - Important: This class is only meant to be subclassed. Do not use this class as is.
 open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardApp {
+    
+    /// Defines the possible height values to use for the keyboard app in the different modes.
+    public enum ViewHeight {
+        /// The keyboard app uses the default height as defined by the SDK.
+        case `default`
+        
+        /// A custom height for the keyboard app.
+        case custom(CGFloat)
+        
+        internal var appViewModeHeight: KeyboardAppViewMode.Height {
+            switch self {
+            case .default: return .default
+            case .custom: return .automatic
+            }
+        }
+    }
     
     public typealias BaseContentResult = Result<[ContentType], BaseError>
     private typealias BaseContentTask = Task<BaseContentResult, Never>
@@ -44,6 +61,11 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         }
     }
     
+    /// The Keyboard app may need to modify the audio session category for video playback.
+    ///
+    /// This closure is used to restore the audio session to its original state when the keyboard app closes.
+    fileprivate var restoreAudioSessionCallback: (() -> Void)?
+    
     private lazy var mediaManager = MediaManager(appId: appId, configuration: configuration)
     
     /// The function to load subsequent pages of the current
@@ -56,12 +78,36 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         currentCategories.first
     }
     
+    /// Whether the keyboard app should include the toggle for the user to enable audio in video previews. Defaults to `true`.
+    ///
+    /// Optionally override this property to change the allow audio behavior of video previews.
+    open var allowAudioInVideoPreviews: Bool { true }
+    
+    /// The height to use when the keyboard app is shown in frame mode. Defaults to  ``FrameModeHeight-swift.enum/default``.
+    ///
+    /// Optionally override this property to return the desired height for frame mode.
+    open var frameHeight: ViewHeight { .default }
+    
+    /// The height to use when the keyboard app is shown in full cover mode. Defaults to  ``FrameModeHeight-swift.enum/default``.
+    ///
+    /// Optionally override this property to return the desired height for full cover mode.
+    open var fullCoverHeight: ViewHeight { .default }
+    
     /// The current `AppListener`.
     ///
     /// Subclasses of the ``BaseApp`` should use this object to show or hide.
     public internal(set) var appListener: AppListener?
     
     private var appView: BaseAppView<ContentType, Category>?
+    
+    private var customHeightConstraint: NSLayoutConstraint?
+    
+    /// Returns the contents height, in points, for horizontally scrolling layout and the contents width, in points, for vertically scrolling layout.
+    ///
+    /// This length directly depends on the available height to show content, on the number of bands and on the cell padding (see ``getListViewConfiguration(forViewMode:)``).
+    @MainActor public var contentSideLength: CGFloat {
+        appView?.contentSideLength ?? 0
+    }
     
     /// Initialises and returns a newly allocated base app object with the specified ID.
     /// - Parameters:
@@ -100,7 +146,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     /// The view mode for the FleksyApp when opened from the carousel. The ``BaseApp`` returns `KeyboardAppViewMode.fullCover`
     ///
     /// Override this property if your FleksyApp needs a different initial view mode.
-    open var defaultViewMode: KeyboardAppViewMode { .fullCover() }
+    open var defaultViewMode: KeyboardAppViewMode { .fullCover(height: fullCoverHeight.appViewModeHeight) }
     
     /// Invoked when the app is about to be opened. Returns the view to use for the FleksyApp.
     ///
@@ -113,13 +159,28 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     @MainActor
     open func open(viewMode: KeyboardAppViewMode, theme: AppTheme) -> UIView? {
         let view: BaseAppView<ContentType, Category>
+        let listViewConfiguration = getListViewConfiguration(forViewMode: viewMode)
         if let appView {
             appView.appTheme = theme
-            appView.updateForViewMode(viewMode)
+            appView.updateForViewMode(viewMode, listViewConfiguration: listViewConfiguration)
             view = appView
         } else {
-            view = BaseAppView(viewMode: viewMode, appTheme: theme, delegate: self, searchText: configuration.searchButtonText)
+            view = BaseAppView(viewMode: viewMode, appTheme: theme, delegate: self, listViewConfiguration: listViewConfiguration, searchText: configuration.searchButtonText)
             appView = view
+        }
+        
+        let viewHeight: ViewHeight = switch viewMode {
+        case .frame: frameHeight
+        case .fullCover: fullCoverHeight
+        }
+        
+        customHeightConstraint?.isActive = false
+        switch viewHeight {
+        case .default:
+            customHeightConstraint = nil
+        case .custom(let height):
+            customHeightConstraint = appView?.heightAnchor.constraint(equalToConstant: height)
+            customHeightConstraint?.isActive = true
         }
 
         if currentCategories.isEmpty {
@@ -146,6 +207,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         activeCategoriesTask = nil
         currentContents = []
         currentCategories = []
+        restoreAudioSessionCallback?()
     }
     
     /// Invoked when the configuration changed.
@@ -232,20 +294,34 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
         return []
     }
     
+    /// This method gets executed when the ``currentCategories`` array has been loaded.
+    ///
+    /// Override this method in case some logic needs to be implemented when this happens. The default implementation of this method does nothing. So you don't need to call `super`'s implementation.
+    @MainActor
+    open func didFinishLoadingCategories() {}
+    
     
     /// Override this method to perform any desired action when the user taps a content cell.
     /// - Parameter content: The content object tapped by the user.
     ///
-    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation
+    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation.
     @MainActor
     open func didSelectContent(_ content: ContentType) {}
+    
+    
+    /// Override this method to perform any desired action when the content cell is about to be displayed to the user.
+    /// - Parameter content: The content object that is about to be displayed to the user.
+    ///
+    /// The default implementation of this method does nothing. So you don't need to call `super`'s implementation.
+    @MainActor
+    open func willShowContent(_ content: ContentType) {}
     
     /// This method is called by the KeyboardSDK when the user taps the app icon next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
     ///
     /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
     @MainActor
     open func onAppIconAction() {
-        appListener?.show(mode: .fullCover())
+        appListener?.show(mode: .fullCover(height: fullCoverHeight.appViewModeHeight))
     }
     
     /// Optionally override this method to return a custom error message for the FleksyApp based on the error.
@@ -260,6 +336,16 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     @MainActor
     open func getErrorMessageForError(_ error: BaseError) -> String {
         error.defaultErrorMessage
+    }
+    
+    @MainActor
+    /// Optionally override this method to return a custom ``ListViewConfiguration`` for the keyboard app.
+    /// - Parameter viewMode: The ``KeyboardAppViewMode`` that will be used in the keyboard app. You can setup your custom ``ListViewConfiguration`` depending on the view mode.
+    /// - Returns: The desired ``ListViewConfiguration``.
+    ///
+    /// The default implementation returns ``ListViewConfiguration/default(keyboardAppViewMode:)``.
+    open func getListViewConfiguration(forViewMode viewMode: KeyboardAppViewMode) -> ListViewConfiguration {
+        .default(keyboardAppViewMode: viewMode)
     }
     
     // MARK: Other public methods
@@ -446,6 +532,7 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
             await MainActor.run { [weak self] in
                 self?.currentCategories = categories
                 self?.appView?.reloadCategories(categories)
+                self?.didFinishLoadingCategories()
             }
         }
         activeCategoriesTask = categoriesTask
@@ -510,18 +597,20 @@ extension BaseApp: AppTextFieldDelegate {
 
 extension BaseApp: BaseAppViewDelegate {
     
+    var allowAudioInVideoCells: Bool { allowAudioInVideoPreviews }
+    
     /// Method called when the user taps the search button in the app during `KeyboardAppViewMode.fullCover` mode. The base app changes the view mode to `KeyboardAppViewMode.frame` with `TopBarMode.appTextField` top bar mode.
     ///
     /// - Important: Do not call this method form the ``BaseApp`` subclass.
     func onSearchAction() {
-        appListener?.show(mode: .frame(barMode: .appTextField(delegate: self)))
+        appListener?.show(mode: .frame(barMode: .appTextField(delegate: self), height: frameHeight.appViewModeHeight))
     }
     
     // MARK: - ListViewDelegate
     
     
     @MainActor
-    func localURLForContentAt(index: Int) -> URL? {
+    func localURLAndTitleForContentAt(index: Int) -> (URL, String?)? {
         guard index < currentContents.count else {
             return nil
         }
@@ -529,7 +618,7 @@ extension BaseApp: BaseAppViewDelegate {
         guard case .remoteMedia(let remoteMedia) = content.contentType else {
             return nil
         }
-        return mediaManager.localFileURL(id: content.id, for: remoteMedia)
+        return (mediaManager.localFileURL(id: content.id, for: remoteMedia), remoteMedia.title)
     }
     
     func loadContentAt(index: Int) async {
@@ -585,6 +674,7 @@ extension BaseApp: BaseAppViewDelegate {
     }
     
     func willShowItemAt(index: Int) {
+        willShowContent(currentContents[index])
         if index >= currentContents.count - 2 {
             loadNextPage()
         }
@@ -614,7 +704,7 @@ extension BaseApp: BaseAppViewDelegate {
     
     @MainActor
     func absoluteSizeForItemAt(index: Int) -> CGSize {
-        guard index < currentContents.count else {
+        guard index < currentContents.endIndex else {
             return .zero
         }
         switch currentContents[index].contentType {
@@ -622,6 +712,56 @@ extension BaseApp: BaseAppViewDelegate {
             return CGSize(width: remoteMedia.width, height: remoteMedia.height)
         case .html(_, let width, let height):
             return CGSize(width: width, height: height)
+        }
+    }
+    
+    @MainActor
+    func shouldResizeItem(at index: Int) -> Bool {
+        guard index < currentContents.endIndex else {
+            return true
+        }
+        switch currentContents[index].contentType {
+        case .remoteMedia:
+            return true
+        case .html:
+            return false
+        }
+    }
+    
+    func willStartVideoPlaybackInVideoCell() {
+        saveCurrentAVAudioSessionCategoryStatusIfNeeded()
+        if AVAudioSession.sharedInstance().category == .soloAmbient {
+            /// If the category is `.soloAmbient` (which is the default category), playing a video (even muted)
+            /// stops any other audio that can be playing on the device by any other app (e.g. music, podcast, etc.)
+            /// We change the category to `.ambient` in order to prevent a muted video playback on the
+            /// Keyboard app from stopping the current audio playback on the device.
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.ambient)
+            } catch {
+                print("Error when setting the AVAudioSession category for playing video: \(error)")
+            }
+        }
+    }
+
+    func willUnmuteAudioInVideoCell() {
+        saveCurrentAVAudioSessionCategoryStatusIfNeeded()
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: .duckOthers)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Error when setting the AVAudioSession category for enabling video sound: \(error)")
+        }
+    }
+    
+    private func saveCurrentAVAudioSessionCategoryStatusIfNeeded() {
+        if restoreAudioSessionCallback == nil {
+            let originalCategory = AVAudioSession.sharedInstance().category
+            let originalMode = AVAudioSession.sharedInstance().mode
+            let originalPolicy = AVAudioSession.sharedInstance().routeSharingPolicy
+            let originalOptions = AVAudioSession.sharedInstance().categoryOptions
+            restoreAudioSessionCallback = {
+                try? AVAudioSession.sharedInstance().setCategory(originalCategory, mode: originalMode, policy: originalPolicy, options: originalOptions)
+            }
         }
     }
     

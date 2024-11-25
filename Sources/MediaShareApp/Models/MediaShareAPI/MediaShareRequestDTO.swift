@@ -20,17 +20,22 @@ struct MediaShareRequestDTO: Encodable {
         case tags
         
         /// Trending content.
-        /// - Parameter page: the requested page number. Minimum value 1.
+        /// - Parameter page: The requested page number. Minimum value 1.
         case trending(page: Int)
         
         /// Search content.
-        /// - Parameter page: the requested page number. Minimum value 1.
+        /// - Parameter page: The requested page number. Minimum value 1.
         /// - Parameter query: The query String  for finding relevant content.
         case search(page: Int, query: String)
+                
+        /// Content selected by the user for sharing.
+        /// - Parameter contentId: The ID of the content selected by the user.
+        case shareTrigger(contentId: String)
     }
     
     enum CodingKeys: String, CodingKey {
         case content
+        case contentId
         case feature
         case userId
         case platform
@@ -47,44 +52,62 @@ struct MediaShareRequestDTO: Encodable {
         case deviceMake
         case deviceModel
         case deviceIfa
+        case navigatorUserAgent = "userAgent"
     }
+    
+    static let adMaxSupportedHeight: Int = 320
     
     let content: ContentType
     let feature: Feature
     let userId: String = (UIDevice.current.identifierForVendor ?? UUID()).uuidString
     let platform: String = UIDevice.current.systemName
-    let adMinWidth: Int = 100
+    let adMinWidth: Int = 50
     let adMaxWidth: Int = 320
-    let adMinHeight: Int = 100
-    let adMaxHeight: Int = 250
+    let adMinHeight: Int = 50
+    let adMaxHeight: Int
     let deviceOperatingSystemVersion: String = UIDevice.current.systemVersion
     let deviceHardwareVersion: String = UIDevice.modelIdentifier
     let deviceMake: String = "apple"
     let deviceModel: String = UIDevice.current.model
     let deviceIdfa: String? = UIDevice.idfa
+    let navigatorUserAgent: String
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(content, forKey: .content)
         try container.encode(userId, forKey: .userId)
         try container.encode(platform, forKey: .platform)
-        try container.encode(adMinWidth, forKey: .adMinWidth)
-        try container.encode(adMaxWidth, forKey: .adMaxWidth)
-        try container.encode(adMinHeight, forKey: .adMinHeight)
-        try container.encode(adMaxHeight, forKey: .adMaxHeight)
+        try container.encode(navigatorUserAgent, forKey: .navigatorUserAgent)
+        
+        let requiresAdsParameters: Bool
         
         switch feature {
         case .healthCheck:
             try container.encode("preFillAds", forKey: .feature)
+            requiresAdsParameters = true
         case .tags:
             try container.encode("tags", forKey: .feature)
+            requiresAdsParameters = false
         case .trending(let page):
             try container.encode("trending", forKey: .feature)
             try container.encode(page, forKey: .page)
+            requiresAdsParameters = true
         case .search(let page, let query):
             try container.encode("search", forKey: .feature)
             try container.encode(query, forKey: .query)
             try container.encode(page, forKey: .page)
+            requiresAdsParameters = true
+        case .shareTrigger(let contentId):
+            try container.encode("shareTrigger", forKey: .feature)
+            try container.encode(contentId, forKey: .contentId)
+            requiresAdsParameters = false
+        }
+        
+        if requiresAdsParameters {
+            try container.encode(adMinWidth, forKey: .adMinWidth)
+            try container.encode(adMaxWidth, forKey: .adMaxWidth)
+            try container.encode(adMinHeight, forKey: .adMinHeight)
+            try container.encode(adMaxHeight, forKey: .adMaxHeight)
         }
         
         try container.encode(deviceOperatingSystemVersion, forKey: .deviceOperatingSystemVersion)

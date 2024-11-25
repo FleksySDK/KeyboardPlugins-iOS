@@ -43,7 +43,7 @@ struct MediaShareResponse: Decodable {
                 }
                 
                 var fileForThumbnailContent: File? {
-                    xs ?? sm ?? md ?? hd ?? self.default
+                    sm ?? md ?? xs ?? hd ?? self.default
                 }
             }
             
@@ -73,13 +73,28 @@ struct MediaShareResponse: Decodable {
 extension MediaShareResponse {
 
     func toResults(contentType: MediaShareApp.ContentType) -> [MediaShareContent] {
-        advertisements.map {
-            $0.toMediaShareContent()
-        }
-        +
-        contents.compactMap {
+        // Ads insert logic:
+        // First ad item is randomly inserted in position 0, 1 or 2.
+        // Each subsequent ad item is inserted randomly spaced by 1, 2 or 3 content items
+                
+        var results = contents.compactMap {
             $0.toMediaShareContent(contentType: contentType)
         }
+                
+        var nextAdIndex: Int = Int.random(in: 0...2)
+        for advertisement in self.advertisements {
+            let adContent = advertisement.toMediaShareContent()
+            if nextAdIndex < results.endIndex {
+                results.insert(adContent, at: nextAdIndex)
+                nextAdIndex += Int.random(in: 2...4)
+            } else {
+                results.append(adContent)
+                // No more contents -> do not add more ads
+                break
+            }
+        }
+        
+        return results
     }
 }
 
@@ -108,7 +123,13 @@ private extension MediaShareResponse.Content {
         default: .image
         }
         
-        guard let thumbnailMedia = RemoteMedia(urlString: thumbnailFile.url,
+        let userFacingTitle: String? = switch contentType {
+        case .clips: title
+        case .gifs, .stickers: nil
+        }
+        
+        guard let thumbnailMedia = RemoteMedia(title: userFacingTitle,
+                                               urlString: thumbnailFile.url,
                                                fileExtension: videoItemWithExtension.extension,
                                                width: thumbnailFile.width,
                                                height: thumbnailFile.height,
@@ -129,7 +150,7 @@ private extension MediaShareResponse.Content.FileFormats {
         case .gifs:
             return getGifWithPasteboardType() ?? getWebpWithPasteboardType() ?? getMp4WithPasteboardType()
         case .stickers:
-            return getWebpWithPasteboardType() ?? getGifWithPasteboardType() ?? getMp4WithPasteboardType()
+            return getMp4WithPasteboardType() ?? getWebpWithPasteboardType() ?? getGifWithPasteboardType()
         }
     }
     

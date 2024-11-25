@@ -10,9 +10,11 @@ import FleksyAppsCore
 
 protocol ListViewDelegate: AnyObject {
     
+    var allowAudioInVideoCells: Bool { get }
+    
     /// Always return the local URL of the file, even if it hasn't been downloaded yet.
     @MainActor
-    func localURLForContentAt(index: Int) -> URL?
+    func localURLAndTitleForContentAt(index: Int) -> (URL, String?)?
     
     /// Tells the delegate that the still-unavailable content at `index` needs to shown now.
     ///
@@ -33,37 +35,46 @@ protocol ListViewDelegate: AnyObject {
     
     @MainActor
     func absoluteSizeForItemAt(index: Int) -> CGSize
+    
+    @MainActor
+    func shouldResizeItem(at index: Int) -> Bool
+    
+    func willUnmuteAudioInVideoCell()
+    
+    func willStartVideoPlaybackInVideoCell()
 }
 
-struct ListViewConfiguration: Equatable {
+/// Contains the information to configure the Base keyboard app's list (number of bands, scroll direction and spacings).
+public struct ListViewConfiguration: Equatable {
     
     /// The number of rows/columns of the collection view.
-    let bands: Int
+    public var bands: Int
     
     /// The scroll direction of the collection view.
-    let direction: UICollectionView.ScrollDirection
+    public var direction: UICollectionView.ScrollDirection
 
     /// The padding for the collection view cells.
-    let cellPadding: CGFloat
+    public var cellPadding: CGFloat
     
     /// The collection view's insets from the app's view.
-    let listInsets: UIEdgeInsets
+    public var listInsets: UIEdgeInsets
     
-    init(keyboardAppViewMode: KeyboardAppViewMode) {
-        switch keyboardAppViewMode {
-        case .fullCover:
-            self.bands = 2
-        case .frame:
-            self.bands = 1
-        @unknown default:
-            self.bands = 1
+    /// The default ``ListViewConfiguration`` for a given ``KeyboardAppViewMode``.
+    /// - Parameter keyboardAppViewMode: The ``KeyboardAppViewMode`` for which to obtain the default ``ListViewConfiguration``.
+    /// - Returns: The default ``ListViewConfiguration`` for a given ``KeyboardAppViewMode``. 2 rows for ``KeyboardAppViewMode/fullCover``, 1 row for ``KeyboardAppViewMode/frame``.
+    public static func `default`(keyboardAppViewMode: KeyboardAppViewMode) -> Self {
+        let bands: Int = switch keyboardAppViewMode {
+        case .fullCover: 2
+        case .frame: 1
+        @unknown default: 1
         }
-        self.direction = .horizontal
-        self.cellPadding = 1
-        self.listInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        return Self(bands: bands,
+                    direction: .horizontal,
+                    cellPadding: 1,
+                    listInsets: UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10))
     }
     
-    init(bands: Int, direction: UICollectionView.ScrollDirection, cellPadding: CGFloat, listInsets: UIEdgeInsets) {
+    public init(bands: Int, direction: UICollectionView.ScrollDirection, cellPadding: CGFloat, listInsets: UIEdgeInsets) {
         self.bands = max(bands, 1)
         self.direction = direction
         self.cellPadding = max(cellPadding, 0)
@@ -113,6 +124,15 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
     }
     
     // MARK: - Interface
+    
+    /// Returns the cells height for horizontally scrolling layout and the cells width for vertically scrolling layout.
+    @MainActor var cellSideLenght: CGFloat {
+        guard let mosaicLayout = collectionView.collectionViewLayout as? MosaicLayout else {
+            fatalError("Only use MosaicLayout as collectionViewLayout.")
+        }
+        let cellSideLength = mosaicLayout.cellSideLength
+        return cellSideLength
+    }
     
     func scrollToStart() {
         collectionView.setContentOffset(.zero, animated: false)
@@ -190,7 +210,7 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
         self.collectionView.tintColor = self.appTheme.foreground
     }
     
-    private func createLayout() -> UICollectionViewLayout {
+    private func createLayout() -> MosaicLayout {
         let layout = MosaicLayout(numberOfBands: configuration.bands,
                                   cellPadding: configuration.cellPadding,
                                   direction: configuration.direction)
@@ -215,15 +235,15 @@ class ListView<Content: BaseContent>: UIView, UICollectionViewDelegate, UICollec
 
         switch cell {
         case let videoCell as VideoCell:
-            if let url = delegate.localURLForContentAt(index: index),
-               !videoCell.loadMedia(localURL: url, autoplay: true) {
+            if let (url, title) = delegate.localURLAndTitleForContentAt(index: index),
+               !videoCell.loadMedia(localURL: url, title: title, autoplay: true, audioToggle: delegate.allowAudioInVideoCells, delegate: self) {
                 Task.detached {
                     await delegate.loadContentAt(index: index)
                     await videoCell.forceLoadMedia(localURL: url, autoplay: true)
                 }
             }
         case let imageCell as ImageCell:
-            if let url = delegate.localURLForContentAt(index: index),
+            if let (url, _) = delegate.localURLAndTitleForContentAt(index: index),
                !imageCell.loadImage(localURL: url) {
                 Task {
                     await delegate.loadContentAt(index: index)
@@ -258,5 +278,25 @@ extension ListView: MosaicLayoutDelegate {
     
     func collectionView(_ collectionView: UICollectionView, absoluteSizeForItemAtIndexPath indexPath: IndexPath) -> CGSize {
         delegate?.absoluteSizeForItemAt(index: indexPath.item) ?? CGSize(width: 1, height: 1)
+    }
+    
+    func shouldResizeItem(at indexPath: IndexPath) -> Bool {
+        delegate?.shouldResizeItem(at: indexPath.item) ?? true
+    }
+}
+
+extension ListView: VideoCellDelegate {
+    
+    func videoCellWillStartPlayingVideo(_ videoCell: VideoCell) {
+        delegate?.willStartVideoPlaybackInVideoCell()
+    }
+    
+    func videoCellWillUnmuteAudio(_ videoCell: VideoCell) {
+        delegate?.willUnmuteAudioInVideoCell()
+        collectionView.visibleCells.forEach {
+            if let otherVideoCell = $0 as? VideoCell, otherVideoCell !== videoCell {
+                otherVideoCell.muteAudio()
+            }
+        }
     }
 }

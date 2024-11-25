@@ -13,6 +13,8 @@ import FleksyAppsCore
 /// The linked content by``RemoteMedia/url``  will be shown in a cell of the list in the FleksyApp. The type of the cell will be determined by the ``RemoteMedia/contentType-swift.property``.
 public struct RemoteMedia: Equatable {
     
+    /// The user-facing title of the media.
+    public let title: String?
     /// The URL source.
     public let url: URL
     /// The extension of the file.
@@ -30,26 +32,29 @@ public struct RemoteMedia: Equatable {
     ///
     /// Returns `nil` if `urlString` contains an invalid url.
     /// - Parameters:
+    ///   - title: The user-facing title of the media.
     ///   - urlString: A `String` containing the URL source.
     ///   - fileExtension: The extension of the file.
     ///   - width: The media's width, in pixels.
     ///   - height: The media's height, in pixels.
     ///   - mediaType: The media's content type.
-    public init?(urlString: String?, fileExtension: String, width: Int, height: Int, mediaType: MediaType) {
+    public init?(title: String? = nil, urlString: String?, fileExtension: String, width: Int, height: Int, mediaType: MediaType) {
         guard let urlString = urlString, let url = URL(string: urlString) else {
             return nil
         }
-        self.init(url: url, fileExtension: fileExtension, width: width, height: height, mediaType: mediaType)
+        self.init(title: title, url: url, fileExtension: fileExtension, width: width, height: height, mediaType: mediaType)
     }
     
     /// Creates a remote media containing the source, lengths and type.
     ///
     /// - Parameters:
+    ///   - title: The user-facing title of the media.
     ///   - url: The URL source.
     ///   - width: The media's width, in pixels.
     ///   - height: The media's height, in pixels.
     ///   - mediaType: The media's content type.
-    public init(url: URL, fileExtension: String, width: Int, height: Int, mediaType: MediaType) {
+    public init(title: String? = nil, url: URL, fileExtension: String, width: Int, height: Int, mediaType: MediaType) {
+        self.title = title
         self.url = url
         self.fileExtension = fileExtension
         self.width = width
