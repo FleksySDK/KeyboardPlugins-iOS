@@ -45,6 +45,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     
     private let contentType: ContentType
     private let service: MediaShareService
+    private let appIconGetter: () -> UIImage?
     
     public override var allowAudioInVideoPreviews: Bool {
         switch contentType {
@@ -63,7 +64,7 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     ///
     /// You need not call this method at any point. This method is public only for conformance to the `KeyboardApp` protocol declared in the package `FleksyAppsCore`.
     public override func appIcon() -> UIImage? {
-        return MediaShareConstants.appIcon(for: contentType)
+        appIconGetter()
     }
     
     /// Creates a new instance of the MediaShareApp with the given MediaShare api key.
@@ -71,15 +72,29 @@ final public class MediaShareApp: BaseApp<MediaShareContent, MediaShareCategory>
     ///   - contentType: The type of content for the user to pick in the MediaShare keyboard app.
     ///   - apiKey: The MediaShare api key.
     ///   - sdkLicenseKey: The license key for the FleksySDK.
+    ///   - appIcon: The app icon for the MediaShare app.
     ///
     /// - Important:
     /// The license used (`sdkLicenseKey`) should contain the appropriate capability for the passed `contentType` (see ``ContentType``).
-    public init(contentType: ContentType, apiKey: String, sdkLicenseKey: String) {
+    public init(contentType: ContentType, apiKey: String, sdkLicenseKey: String, appIcon: @autoclosure @escaping () -> UIImage?) {
         let configuration = BaseConfiguration(searchPlaceholder: MediaShareConstants.LocalizedStrings.searchPlaceHolder.get(for: contentType),
                                               searchButtonText: MediaShareConstants.LocalizedStrings.searchButtonText.get(for: contentType))
         self.service = MediaShareService(contentType: contentType, MediaShareApiKey: apiKey, sdkLicenseId: sdkLicenseKey)
         self.contentType = contentType
+        self.appIconGetter = appIcon
         super.init(id: Self.appId(forContentType: contentType), configuration: configuration)
+    }
+    
+    /// Creates a new instance of the MediaShareApp with the given MediaShare api key with the default app icon.
+    /// - Parameters:
+    ///   - contentType: The type of content for the user to pick in the MediaShare keyboard app.
+    ///   - apiKey: The MediaShare api key.
+    ///   - sdkLicenseKey: The license key for the FleksySDK.
+    ///
+    /// - Important:
+    /// The license used (`sdkLicenseKey`) should contain the appropriate capability for the passed `contentType` (see ``ContentType``).
+    public convenience init(contentType: ContentType, apiKey: String, sdkLicenseKey: String) {
+        self.init(contentType: contentType, apiKey: apiKey, sdkLicenseKey: sdkLicenseKey, appIcon: MediaShareConstants.appIcon(for: contentType))
     }
     
     /// Gets the default content page for the app.
