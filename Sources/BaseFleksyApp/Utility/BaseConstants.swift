@@ -22,11 +22,11 @@ public enum BaseConstants {
         }
         
         static var searchIcon: UIImage? {
-            UIImage(systemName: "magnifyingglass.circle.fill")?.withRenderingMode(.alwaysTemplate)
+            UIImage(systemName: "magnifyingglass")?.withRenderingMode(.alwaysTemplate)
         }
         
-        static var closeButtonIcon: UIImage? {
-            UIImage(systemName: "xmark.circle.fill")?.withRenderingMode(.alwaysTemplate)
+        static var backButtonIcon: UIImage? {
+            UIImage(systemName: "chevron.left")?.withRenderingMode(.alwaysTemplate)
         }
         
         static var previewErrorImage: UIImage? {

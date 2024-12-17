@@ -66,15 +66,24 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
     private let categoryView: CategoryView<Category>
     
     private let searchButton = UIButton()
-    private let closeButton = UIButton()
+    private let backButton = UIButton()
     private let errorView = UIView()
     private let errorLabel = UILabel()
     private let loader = UIActivityIndicatorView(style: .large)
     private lazy var actionsViewContainer: UIView = {
-        let stackView = UIStackView(arrangedSubviews: [searchButton, closeButton])
+        let stackView = UIStackView(arrangedSubviews: [backButton, searchButton])
         stackView.axis = .horizontal
-        stackView.alignment = .fill
+        stackView.alignment = .center
         stackView.distribution = .fill
+        stackView.layoutMargins = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 10)
+        stackView.spacing = 3
+        stackView.isLayoutMarginsRelativeArrangement = true
+        
+        NSLayoutConstraint.activate([
+            backButton.heightAnchor.constraint(equalTo: stackView.heightAnchor),
+            searchButton.heightAnchor.constraint(equalTo: stackView.heightAnchor, constant: -8)
+        ])
+        
         return stackView
     }()
     
@@ -240,11 +249,11 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         searchButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         searchButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
         
-        closeButton.contentMode = .scaleAspectFit
-        closeButton.contentHorizontalAlignment = .trailing
-        closeButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
-        closeButton.setImage(BaseConstants.Images.closeButtonIcon, for: .normal)
-        closeButton.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
+        backButton.contentMode = .center
+        backButton.setImage(BaseConstants.Images.backButtonIcon, for: .normal)
+        backButton.imageEdgeInsets = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
+        backButton.imageView?.contentMode = .scaleAspectFit
+        backButton.addTarget(self, action: #selector(closeAction), for: .touchUpInside)
         
         errorView.layer.masksToBounds = true
         errorView.layer.cornerRadius = 3
@@ -283,7 +292,7 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         errorView.addSubview(errorLabel)
         
         NSLayoutConstraint.activate([
-            closeButton.widthAnchor.constraint(equalToConstant: Self.actionsViewHeight),
+            backButton.widthAnchor.constraint(equalToConstant: Self.actionsViewHeight),
             actionsViewContainer.heightAnchor.constraint(equalToConstant: Self.actionsViewHeight),
             categoryView.heightAnchor.constraint(equalToConstant: Self.categoriesViewHeight),
             
@@ -320,6 +329,10 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         listViewContainer.backgroundColor = .clear
         categoryViewContainer.backgroundColor = .clear
         
+        searchButton.clipsToBounds = true
+        searchButton.layer.cornerRadius = 10
+        searchButton.layer.cornerCurve = .continuous
+        
         updateColors()
         updateFont()
         
@@ -330,11 +343,11 @@ class BaseAppView<Content: BaseContent, Category: BaseCategory>: UIView {
         backgroundColor = appTheme.background
         tintColor = appTheme.foreground
         
-        closeButton.tintColor = appTheme.foreground
-        closeButton.backgroundColor = .clear
+        backButton.tintColor = appTheme.foreground
+        backButton.backgroundColor = .clear
         
         searchButton.tintColor = appTheme.foreground
-        searchButton.backgroundColor = .clear
+        searchButton.backgroundColor = appTheme.accent
         searchButton.setTitleColor(appTheme.foreground, for: .normal)
         
         errorView.backgroundColor = appTheme.foreground
