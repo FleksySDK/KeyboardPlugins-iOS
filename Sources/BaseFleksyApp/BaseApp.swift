@@ -316,14 +316,6 @@ open class BaseApp<ContentType: BaseContent, Category: BaseCategory>: KeyboardAp
     @MainActor
     open func willShowContent(_ content: ContentType) {}
     
-    /// This method is called by the KeyboardSDK when the user taps the app icon next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
-    ///
-    /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
-    @MainActor
-    open func onAppIconAction() {
-        appListener?.show(mode: .fullCover(height: fullCoverHeight.appViewModeHeight))
-    }
-    
     /// Optionally override this method to return a custom error message for the FleksyApp based on the error.
     /// - Parameter error: The error that happened.
     /// - Returns: An error message to be presented to the user.
@@ -590,6 +582,27 @@ extension BaseApp: AppTextFieldDelegate {
     /// - Important: Do not call this method form the ``BaseApp`` subclass.
     public func onCloseAction() {
         appListener?.hide()
+    }
+    
+    /// This method is called by the KeyboardSDK to obtain the image for the button next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` shows a back image.
+    ///
+    /// Optionally override this method if your ``BaseApp`` subclass needs to show a different image for the button. See also ``contentModeForTextFieldIcon()``.
+    public func textFieldIcon() -> UIImage? {
+        BaseConstants.Images.backButtonIcon
+    }
+    
+    /// This method is called by the KeyboardSDK to obtain the content mode for the image to show in the button next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` chooses the `UIView.ContentMode.center` content mode.
+    ///
+    /// Optionally override this method if your ``BaseApp`` subclass needs to show a different image for the button with a different content mode.
+    public func contentModeForTextFieldIcon() -> UIView.ContentMode? {
+        .center
+    }
+    
+    /// This method is called by the KeyboardSDK when the user taps the button next to the in-keyboard text field (during `TopBarMode.appTextField` mode). The implementation of the ``BaseApp`` transitions the FleksyApp to `KeyboardAppViewMode.fullCover` mode.
+    ///
+    /// Optionally override this method if your ``BaseApp`` subclass needs to implement its custom behavior.
+    public func onTextFieldIconAction() {
+        appListener?.show(mode: .fullCover(height: fullCoverHeight.appViewModeHeight))
     }
 }
 

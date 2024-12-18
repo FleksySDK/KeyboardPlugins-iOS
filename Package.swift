@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "FleksyApps",
-    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v15)],
     products: [
         .library(
             name: "FleksyApps",
@@ -15,7 +15,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/FleksySDK/iOS-FleksyAppsCore.git", from: "1.1.1"),
+        .package(url: "https://github.com/FleksySDK/iOS-FleksyAppsCore.git", from: "1.4.0"),
     ],
     targets: [
         .target(
